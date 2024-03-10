@@ -1,0 +1,5 @@
+*.docx
+app_sec/credentials/DataBaseCredentials.json
+app_sec/credentials/EmailCredentials.json
+*.xlsx
+*.pyc

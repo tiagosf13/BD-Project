@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinancialTipEco Emergency Codes</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/emergency_codes.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='js/emergency_codes.js')}}"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>FinancialTipEco Emergency Codes</h1>
+        <div class="board" id="codes-board">
+            <!-- Codes will be dynamically inserted here -->
+        </div>
+        <div class="buttons">
+            <button onclick="copyAllCodes()">Copy Codes</button>
+            <button onclick="printCodes()">Print Codes</button>
+            <button class="continue-button" onclick="redirectLogin()">Continue to Login</button>
+        </div>
+    </div>
+
+    <script>
+        const id = '{{id}}'; // Assign the product ID to a JavaScript variable
+        // Call the fetchCodes function when the page loads
+        window.onload = fetchCodes();
+    </script>
+</body>
+</html>
+

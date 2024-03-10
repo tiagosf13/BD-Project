@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" style="color-scheme: dark;">
+<head>
+    <meta charset="UTF-8">
+    <title>ECO - Account Settings</title>
+    <link rel="icon" type="image/png" href="{{ url_for('views.get_image', filename='database/accounts/' + id + '.png') }}"/>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/profile.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='js/profile.js')}}"></script>
+</head>
+<body style="margin-top: 7%;">
+<h2>Account Settings</h2>
+<img src="{{ url_for('views.get_image', filename='database/accounts/' + id + '.png') }}" alt="Profile Photo" class="profile-image" style="margin-top: 70px;">
+<h2>{{username}}</h2>
+    <form action="/update_account/{{id}}" method="post" enctype="multipart/form-data" onsubmit="return validateForm();" style="margin-top: 70px;">
+        <div class="container">
+            <label for="username"><b>Username</b></label>
+            <input type="text" placeholder="Enter Username" name="username" id="username" style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;">
+
+            <label for="email"><b>Email</b></label>
+            <input type="text" placeholder="Enter Email" name="email" id="email" style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;">
+
+            <label for="psw"><b>Old Password</b></label>
+            <input type="password" placeholder="Enter Password" name="psw-old" id="psw-old" style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;" oninput="checkPasswordCriteria()">
+
+            <label for="psw"><b>Password</b></label>
+            <input type="password" placeholder="Enter Password" name="psw" id="psw" style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;" oninput="checkPasswordCriteria()">
+
+            <label for="psw-repeat"><b>Repeat Password</b></label>
+            <input type="password" placeholder="Repeat Password" name="psw-repeat" id="psw-repeat" style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;" oninput="checkPasswordCriteria()">
+            <div id="error-message-psw" style="color: red;"></div>
+            <div id="error-message-username" style="color: red;"></div>
+            <div id="error-message-email" style="color: red;"></div>
+
+            <!-- Update your HTML form with a list to display password criteria -->
+            <!-- Place this list under the password fields -->
+            <div class="password-criteria">
+                <h4 style="color: white;">Password Criteria</h4>
+                <ul id="criteria-list">
+                    <li id="criteria-length">12 to 128 characters</li>
+                    <li id="criteria-uppercase">At least one uppercase letter</li>
+                    <li id="criteria-lowercase">At least one lowercase letter</li>
+                    <li id="criteria-digit">At least one digit</li>
+                    <li id="criteria-special">At least one special character</li>
+                    <li id="criteria-match">Passwords match</li>
+                    <li id="criteria-breach_check">New Password not Breached</li>
+                </ul>
+            </div>
+
+            <label for="profile_photo"><b>Profile Photo</b></label>
+            <br>
+            <label class="image-label">
+                Insert<input type="file" name="profile_photo" accept="image/*" onchange="previewImage();" capture="camera" class="image-input">
+            </label>
+            <br>
+            <img src="" alt="Preview Image" class="preview-image">
+            <br>
+            <br>
+            <button type="submit" style="height: fit-content;" class="savebtn" id="savebtn">Save</button disabled>
+            <button type="button" style="height: fit-content;" class="cancelbtn" onclick='goToCatalogPage("{{id}}")'>Cancel</button>
+            <button type="button" style="height: fit-content; background-color: blue;" class="cancelbtn" onclick="window.location.href = '/new_emergency_codes/{{id}}';">Generate New Emergency Codes</button>
+            <button type="button" style="height: fit-content; background-color: orange;" class="cancelbtn" onclick="window.location.href = '/get_user_data/{{id}}';">Retrieve My Data</button>
+        </div>
+    </form>
+</body>
+</html>
