@@ -2,7 +2,7 @@ import os, tempfile
 from handlers.extensions import bcrypt
 from handlers.UserManagement import search_user_by_email, get_id_by_username, send_password_reset_email
 from flask import Blueprint, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
-from handlers.UserManagement import search_user_by_username, create_user, get_orders_by_user_id, generate_random_id_totp_temp, check_password, generate_excel_user_data
+from handlers.UserManagement import search_user_by_username, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
 from handlers.UserManagement import update_username, search_user_by_id, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
 from handlers.UserManagement import get_user_role, compose_email_body, update_password, generate_reset_token, set_reset_token_for_user
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
@@ -13,7 +13,7 @@ from handlers.DataBaseCoordinator import check_database_table_exists, db_query, 
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
-from handlers.TOTPHandler import generate_totp_atributes, verify_totp_code, store_totp_stage, get_totp_atributes, generate_emergency_codes
+from handlers.TOTPHandler import generate_totp_atributes, verify_totp_code, generate_emergency_codes
 
 
 
@@ -26,7 +26,6 @@ check_database_table_exists("users")
 check_database_table_exists("products")
 check_database_table_exists("reviews")
 check_database_table_exists("all_orders")
-check_database_table_exists("totp_temp")
 check_database_table_exists("emergency_codes")
 
 
@@ -97,50 +96,52 @@ def signup():
         return render_template("signup.html")
 
 
+# This view validates the consent after signup view redirects to the information_collected.html
 @views.route('/validate_consent', methods=['POST'])
 def validate_consent():
     consent = request.form.get('consent')
     if consent:
-        temp_id = str(generate_random_id_totp_temp())
 
         username = session.get("signup_username")
-        email = session.get("signup_email")
-        hashed_password = session.get("signup_hashed_password")
 
         secret_key, secret_key_timestamp, qr_code_base64 = generate_totp_atributes(username)
 
-        store_totp_stage(temp_id, username, secret_key, secret_key_timestamp, email, hashed_password)
+        # Store the secret_key and the secret_key_timestamp in the session
+        session["secret_key"] = secret_key
+        session["secret_key_timestamp"] = secret_key_timestamp
 
-        # Clean the session variables
-        session.pop("signup_username", None)
-        session.pop("signup_email", None)
-        session.pop("signup_hashed_password", None)
-
-        return render_template('totp_signup.html', secret_key=secret_key, qr_code=qr_code_base64, id=temp_id)
+        return render_template('totp_signup.html', secret_key=secret_key, qr_code=qr_code_base64)
     else:
         return redirect(url_for("views.signup"))
 
 
-@views.route('verify_totp_signup/<id>', methods=['POST'])
-def verify_totp_signup(id):
+@views.route('verify_totp_signup/', methods=['POST'])
+def verify_totp_signup():
 
-    token = request.form.get("token")
+    inserted_totp = request.form.get("token")
 
-    if token == None:
+    if inserted_totp == None:
         return render_template("signup.html", message="Invalid TOTP code. Please try again.")
 
-    # Verify the TOTP code
-    if verify_totp_code(id, token, 'totp_temp'):
+    secret_key = session.get("secret_key")
 
-        # Get all the atributes from the temporary table
-        username, email, hashed_password, secret_key, secret_key_timestamp = get_totp_atributes(id)
+    # Verify the TOTP code
+    if verify_totp_code(inserted_totp, secret_key):
+
+        username = session.get("signup_username")
+        email = session.get("signup_email")
+        hashed_password = session.get("signup_hashed_password")
+        secret_key_timestamp = session.get("secret_key_timestamp")
 
         # Create the user in the database with the hashed password
         id, ans = create_user(username, hashed_password, email, secret_key, secret_key_timestamp)
 
-        # Clear the temporary table
-        query = "DELETE FROM totp_temp WHERE id = %s"
-        db_query(query, (id,))
+        # Clear the session variables
+        session.pop("signup_hashed_password", None)
+        session.pop("signup_username", None)
+        session.pop("signup_email", None)
+        session.pop("secret_key", None)
+        session.pop("secret_key_timestamp", None)
 
         if ans == False:
             return render_template("signup.html", message="Error! Please try again.")

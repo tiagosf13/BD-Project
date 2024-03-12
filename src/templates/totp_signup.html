@@ -17,7 +17,7 @@
         <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
 
         <!-- Form for user input -->
-        <form action="/verify_totp_signup/{{ id }}" method="post">
+        <form action="/verify_totp_signup/" method="post">
             <input type="text" name="token" placeholder="Enter TOTP code" required>
             <input type="submit" value="Verify">
         </form>

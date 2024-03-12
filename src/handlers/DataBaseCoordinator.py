@@ -112,9 +112,6 @@ def check_database_table_exists(table_name):
                 query = "CREATE TABLE reviews (id SERIAL PRIMARY KEY, product_id INTEGER, user_id INTEGER, rating INTEGER, review VARCHAR(255))"
                 db_query(query, ())
             
-            elif table_name == "totp_temp":
-                query = "CREATE TABLE totp_temp (id SERIAL PRIMARY KEY, username VARCHAR(255), secret_key VARCHAR(255), secret_key_timestamp TIMESTAMP, email VARCHAR(255), password VARCHAR(255))"
-                db_query(query, ())
             elif table_name == "emergency_codes":
                 query = "CREATE TABLE emergency_codes (id SERIAL PRIMARY KEY, code JSON, born TIMESTAMP)"
                 db_query(query, ())

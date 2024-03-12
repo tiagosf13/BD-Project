@@ -86,13 +86,6 @@ def generate_qr_code(secret_key, username):
     qr_code_base64 = base64.b64encode(qr_code.getvalue()).decode('utf-8').strip()
     return qr_code_base64
 
-def store_totp_stage(temp_id, username, secret_key, secret_key_timestamp, email, hashed_password):
-    # Store the secret key securely for each user, maybe in a database
-    # For demonstration purposes, a dictionary is used here to store secrets
-    
-    query = "INSERT INTO totp_temp (id, username, secret_key, secret_key_timestamp, email, password) VALUES (%s, %s, %s, %s, %s, %s);"
-    db_query(query, (temp_id, username, secret_key, secret_key_timestamp, email, hashed_password))
-
 def update_totp(id, secret_key, secret_key_timestamp):
     # Store the secret key securely for each user, maybe in a database
     # For demonstration purposes, a dictionary is used here to store secrets
@@ -101,21 +94,14 @@ def update_totp(id, secret_key, secret_key_timestamp):
     db_query(query, (secret_key, secret_key_timestamp, id))
 
 
-def verify_totp_code(id, token, table_name, username=None):
-    query = f"SELECT secret_key, secret_key_timestamp FROM {table_name} WHERE id = %s"
-
-    # Fetch the secret key for the user and the secret_key_timestamp
-    result = db_query(query, (id,))
-    if result:
-        secret_key = result[0][0] 
-
-        totp = pyotp.TOTP(secret_key)
-        is_verified = totp.verify(token)
-        if is_verified:
-            return True
-        else:
-            return False
-    return False
+def verify_totp_code(token, secret_key=None):
+    # Verify the TOTP code
+    totp = pyotp.TOTP(secret_key)
+    is_verified = totp.verify(token)
+    if is_verified:
+        return True
+    else:
+        return False
 
 
 
@@ -130,19 +116,3 @@ def get_totp_secret(id):
         return secret_key
     
     return None
-
-def get_totp_atributes(id):
-
-    # Fetch the secret key for the user
-    query = "SELECT username, email, password, secret_key, secret_key_timestamp FROM totp_temp WHERE id = %s"
-    result = db_query(query, (id,))
-
-    if result:
-        username = result[0][0]
-        email = result[0][1]
-        hashed_password = result[0][2]
-        secret_key = result[0][3]
-        secret_key_timestamp = result[0][4]
-        return username, email, hashed_password, secret_key, secret_key_timestamp
-    
-    return None, None, None

@@ -230,15 +230,6 @@ def check_id_existence(id):
     query = "SELECT EXISTS(SELECT 1 FROM users WHERE id = %s);"
     result = db_query(query, (id,))
 
-
-    return result[0][0]
-
-def check_id_existence_totp_temp(id):
-    # Secure Query
-    query = "SELECT EXISTS(SELECT 1 FROM totp_temp WHERE id = %s);"
-    result = db_query(query, (id,))
-
-
     return result[0][0]
 
 
@@ -256,16 +247,6 @@ def generate_random_id():
 
     # Check if the generated ID already exists, regenerate if necessary
     while check_id_existence(random_id):
-        random_id = random.randint(100000, 999999)
-
-    return random_id
-
-def generate_random_id_totp_temp():
-    # Generate a random ID
-    random_id = random.randint(100000, 999999)
-
-    # Check if the generated ID already exists, regenerate if necessary
-    while check_id_existence_totp_temp(random_id):
         random_id = random.randint(100000, 999999)
 
     return random_id
