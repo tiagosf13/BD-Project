@@ -28,7 +28,7 @@ def get_orders(username_orders):
 
 def get_all_products():
     # Secure Query - Select specific columns
-    query = "SELECT id, name, description, price, category, stock FROM products"
+    query = "SELECT product_id, product_name, product_description, price, category, stock FROM products"
     results = db_query(query)
     
     # Fetch all rows in one go and convert to a list of dictionaries
@@ -45,8 +45,8 @@ def get_all_products():
 
 def verify_product_id_exists(id):
     # Secure Query
-    query = "SELECT * FROM products WHERE id = %s"
-    results = db_query(query, (id,))
+    query = "SELECT * FROM products WHERE product_id = ?"
+    results = db_query(query, (id))
 
     if len(results) == 0:
         return False
@@ -56,8 +56,8 @@ def verify_product_id_exists(id):
 
 def get_product_by_id(id):
     # Secure Query
-    query = "SELECT * FROM products WHERE id = %s"
-    results = db_query(query, (id,))
+    query = "SELECT * FROM products WHERE product_id = ?"
+    results = db_query(query, (id))
 
 
     if len(results) == 0:
@@ -72,6 +72,7 @@ def get_product_by_id(id):
             "category": row[4],
             "stock": row[5]
         }
+        print(product)
         return product
     
 
@@ -82,8 +83,8 @@ def get_product_reviews(product_id):
         return None
 
     # Secure Query
-    query = "SELECT * FROM reviews WHERE product_id = %s"
-    results = db_query(query, (product_id,))
+    query = "SELECT * FROM reviews WHERE product_id = ?"
+    results = db_query(query, (product_id))
 
     reviews = []
     for row in results:
@@ -99,37 +100,33 @@ def get_product_reviews(product_id):
     return reviews
 
 
-def get_cart(username_cart):
-    # Secure Query
-    if not is_valid_table_name(username_cart):
-        return []
+def get_cart(user_id):
 
-    query = "SELECT * FROM {};".format(username_cart)
-    result = db_query(query)
+    query = "SELECT * FROM carts WHERE user_id=?;"
+    result = db_query(query, (user_id))
 
     cart = []
 
     for element in result:
-        if not ((verify_product_id_exists(element[0]) and element[1] > 0 and element[1] <= get_product_by_id(element[0])["stock"])):
-            # Secure Query
-            if is_valid_table_name(username_cart):
-                delete_query = "DELETE FROM {} WHERE product_id = %s;".format(username_cart)
-                db_query(delete_query, (element[0],))
+        print(element)
+        if not ((verify_product_id_exists(element[1]) and element[2] > 0 and element[2] <= get_product_by_id(element[1])["stock"])):
+            delete_query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?;"
+            db_query(delete_query, (element[1], user_id))
 
         else:
             cart.append({
-                "product_id": element[0],
-                "quantity": element[1],
-                "name": get_product_by_id(element[0])["name"],
-                "price": get_product_by_id(element[0])["price"]
+                "product_id": element[1],
+                "quantity": element[2],
+                "name": get_product_by_id(element[1])["name"],
+                "price": get_product_by_id(element[1])["price"]
             })
     return cart
 
 
 def get_user_email(id):
     # Secure Query
-    query = "SELECT email FROM users WHERE id = %s"
-    results = db_query(query, (id,))
+    query = "SELECT email FROM users WHERE user_id = ?"
+    results = db_query(query, (id))
 
     
     if len(results) == 0:

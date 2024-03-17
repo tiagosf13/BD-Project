@@ -9,7 +9,7 @@ from handlers.ProductManagement import create_review, set_cart_item, update_prod
 from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
 from handlers.ProductManagement import update_product_description, update_product_price, update_product_category, update_product_quantity
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import check_database_table_exists, db_query, is_valid_table_name
+from handlers.DataBaseCoordinator import check_database_tables_exist, db_query, is_valid_table_name
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
@@ -22,11 +22,7 @@ views = Blueprint('views', __name__)
 
 
 # Check if the database tables exist
-check_database_table_exists("users")
-check_database_table_exists("products")
-check_database_table_exists("reviews")
-check_database_table_exists("all_orders")
-check_database_table_exists("emergency_codes")
+check_database_tables_exist()
 
 
 # This route is used to serve the index page
@@ -125,6 +121,8 @@ def verify_totp_signup():
 
     secret_key = session.get("secret_key")
 
+    print(inserted_totp, secret_key)
+    print("aqui")
     # Verify the TOTP code
     if verify_totp_code(inserted_totp, secret_key):
 
@@ -134,7 +132,7 @@ def verify_totp_signup():
         secret_key_timestamp = session.get("secret_key_timestamp")
 
         # Create the user in the database with the hashed password
-        id, ans = create_user(username, hashed_password, email, secret_key)
+        id, ans = create_user(username, hashed_password, email, secret_key, secret_key_timestamp)
 
         print(ans, id)
 
@@ -205,7 +203,8 @@ def get_emergency_codes(id):
 
     # Generate 10 emergency codes, each with 15 characters (Upper case letters, Lower case letters, Special characters and numbers)
     codes = generate_emergency_codes(id)
-
+    print("codes")
+    print(codes)
     # Logic to fetch codes (replace with your actual data retrieval)
     return jsonify({'codes': codes})
 
@@ -235,10 +234,6 @@ def verify_totp_login(id):
             session["username"] = username
             session["id"] = id
             session["admin"] = get_user_role(session["id"])
-
-            # Check for table existence
-            check_database_table_exists(username.lower() + "_cart")
-            check_database_table_exists(f"{username.lower()}_orders")
 
             return jsonify({'message': 'Login successful.'}), 200
         else:
@@ -371,75 +366,75 @@ def update_account(id):
     if id == None and session.get("id") == None:
         return redirect(url_for("views.login"))
     
-    try:
+    #try:
     
-        if os.name == "nt":
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-        else:
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
-            
-        accounts_directory = os.path.join(current_directory, "database", "accounts")
-        os.makedirs(accounts_directory, exist_ok=True)  # Ensure the directory exists
+    if os.name == "nt":
+        # Get the current working directory
+        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
+    else:
+        # Get the current working directory
+        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+        
+    accounts_directory = os.path.join(current_directory, "database", "accounts")
+    os.makedirs(accounts_directory, exist_ok=True)  # Ensure the directory exists
 
-        file_path = os.path.join(accounts_directory, f"{id}.png").replace("\\", "/")
+    file_path = os.path.join(accounts_directory, f"{id}.png").replace("\\", "/")
 
-        # Get the new uploaded user's account image
-        profile_photo = request.files.get("profile_photo")
+    # Get the new uploaded user's account image
+    profile_photo = request.files.get("profile_photo")
 
-        # If there is an image and the size is less than 5MB
-        if profile_photo and not profile_photo.content_length > 5120 * 5120:
-            # Save the image to the user's account
-            profile_photo.save(file_path)
+    # If there is an image and the size is less than 5MB
+    if profile_photo and not profile_photo.content_length > 5120 * 5120:
+        # Save the image to the user's account
+        profile_photo.save(file_path)
 
-        # Get the username, email, and password from the user's session
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("psw")
-        old_password = request.form.get("psw-old")
+    # Get the username, email, and password from the user's session
+    username = request.form.get("username")
+    email = request.form.get("email")
+    password = request.form.get("psw")
+    old_password = request.form.get("psw-old")
 
-        # Check if the username field wasn't empty and occupied by another user
-        if username != "" and not check_username_exists(username) and is_valid_input(username):
+    # Check if the username field wasn't empty and occupied by another user
+    if username != "" and not check_username_exists(username) and is_valid_input(username):
 
-            # Update the username
-            update_username(id, username)
+        # Update the username
+        update_username(id, username)
 
-            # Set the session's username
-            session["username"] = username
+        # Set the session's username
+        session["username"] = username
 
-        else:
-            # If there is a problem with the username, get the username based on the ID
+    else:
+        # If there is a problem with the username, get the username based on the ID
+        username = search_user_by_id(id)[1]
+
+    # Check if the email field wasn't empty and occupied by another user
+    if email != "" and not check_email_exists(email) and is_valid_input(email):
+
+        # Update the email
+        update_email(id, email)
+
+    else:
+        # If there is a problem with the email, get the email based on the ID
+        email = search_user_by_id(id)[3]
+
+    # Check if the password wasn't empty
+    if password != "":
+        # Update the password
+        # Hash the password before storing it in the database
+
+        if bcrypt.check_password_hash(search_user_by_id(id)[2], old_password):
+            hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
             username = search_user_by_id(id)[1]
-
-        # Check if the email field wasn't empty and occupied by another user
-        if email != "" and not check_email_exists(email) and is_valid_input(email):
-
-            # Update the email
-            update_email(id, email)
-
+            update_password(username, hashed_password)
         else:
-            # If there is a problem with the email, get the email based on the ID
-            email = search_user_by_id(id)[3]
+            return render_template("profile.html", message="Invalid password.", username=username, id=id)
 
-        # Check if the password wasn't empty
-        if password != "":
-            # Update the password
-            # Hash the password before storing it in the database
-
-            if bcrypt.check_password_hash(search_user_by_id(id)[2], old_password):
-                hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-                username = search_user_by_id(id)[1]
-                update_password(username, hashed_password)
-            else:
-                return render_template("profile.html", message="Invalid password.", username=username, id=id)
-
-        # Return the profile page
-        return redirect(url_for("views.catalog", id=id))
+    # Return the profile page
+    return redirect(url_for("views.catalog", id=id))
     
-    except Exception as e:
-        print(e)
-        return render_template("profile.html", message="Invalid input.", username=username, id=id)
+    #except Exception as e:
+    #    print(e)
+    #    return render_template("profile.html", message="Invalid input.", username=username, id=id)
 
 
 # This view is used to get a image
@@ -636,35 +631,32 @@ def add_item_to_cart(product_id):
     elif verify_id_exists(product_id, "products") == False:
         return redirect(url_for("views.catalog", id=id))
     
-    username = search_user_by_id(id)[1].lower()
     try:
         data = request.get_json()
         quantity = data.get('quantity')
 
         if quantity <= 0:
+            print("Invalid quantity.")
             return jsonify({'error': 'Invalid quantity.'}), 500
         
-        if not is_valid_table_name(username + "_cart"):
-            return jsonify({'error': 'Invalid table name.'}), 400
-        
         # Secure Query
-        query = "SELECT * FROM {} WHERE product_id = %s".format(username + "_cart")
-        result = db_query(query, (product_id,))
-
+        query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
+        result = db_query(query, (product_id, id))
         product_stock = get_product_by_id(product_id)["stock"]
 
-        if result != [] and result[0][1] + quantity > product_stock:
+        if result != [] and result[0][2] + quantity > product_stock:
+            print("Not enough stock.")
             return jsonify({'error': 'Not enough stock.'}), 500
         elif result == [] and (quantity > product_stock):
+            print("Not enough stock.1")
             return jsonify({'error': 'Not enough stock.'}), 500
         else:
-            set_cart_item(username + "_cart", product_id, quantity, "add")
+            set_cart_item(id, product_id, quantity, "add")
             return jsonify({'message': 'Product added to the cart.'}), 200
-        
+    
     except Exception as e:
         print(e)
         return jsonify({'error': str(e)}), 500
-    
 
 
 @views.route('/remove_item_cart/<int:product_id>', methods=['POST'])
@@ -678,33 +670,26 @@ def remove_item_from_cart(product_id):
     elif verify_id_exists(product_id, "products") == False:
         return redirect(url_for("views.catalog", id=id))
 
-    username = search_user_by_id(id)[1].lower()
     try:
         data = request.get_json()
         quantity = data.get('quantity')
 
-        # Secure Query: Validate the table name
-        cart_table_name = f"{username}_cart"
-
-        if not is_valid_table_name(cart_table_name):
-            return jsonify({'error': 'Invalid table name.'}), 400
-
-        if check_product_in_cart(cart_table_name, product_id) == False or quantity <= 0:
+        if check_product_in_cart(id, product_id) == False or quantity <= 0:
             return jsonify({'error': 'Product not in cart.'}), 500
         else:
             # Secure Query
-            query = "SELECT * FROM {} WHERE product_id = %s".format(cart_table_name)
-            result = db_query(query, (product_id,))
+            query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
+            result = db_query(query, (product_id, id))
 
-            if result != [] and result[0][1] == quantity:
+            if result != [] and result[0][2] == quantity:
                 # Remove the product from the cart
                 # Secure Query
-                query = "DELETE FROM {} WHERE product_id = %s".format(cart_table_name)
-                db_query(query, (product_id,))
+                query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?"
+                db_query(query, (product_id, id))
                 return jsonify({'message': 'Product removed from the cart.'}), 200
-            elif result != [] and result[0][1] - quantity >= 0:
+            elif result != [] and result[0][2] - quantity >= 0:
                 # Secure Query: Update the user's cart in the database
-                set_cart_item(cart_table_name, product_id, quantity, "remove")
+                set_cart_item(id, product_id, quantity, "remove")
                 return jsonify({'message': 'Product removed from the cart.'}), 200
             else:
                 return jsonify({'message': 'Product not in the cart.'}), 500
@@ -719,7 +704,7 @@ def get_cart_items():
     if id == None:
         return redirect(url_for("views.login"))
     
-    user_cart = get_cart(search_user_by_id(id)[1].lower() + "_cart")
+    user_cart = get_cart(id)
 
     return jsonify(user_cart)
 
@@ -732,18 +717,12 @@ def remove_all_items_cart():
     if id == None:
         return redirect(url_for("views.login"))
 
-    username = search_user_by_id(id)[1].lower()
-
     # Remove all the products from the cart
-    # Secure Query: Validate the table name
-    table_name = username + "_cart"
-    if not is_valid_table_name(table_name):
-        return jsonify({'error': 'Invalid table name.'}), 400
 
     # Remove all the products from the cart
     # Secure Query
-    query = "DELETE FROM {}".format(table_name)
-    db_query(query)
+    query = "DELETE FROM carts WHERE user_id = ?"
+    db_query(query, (id))
 
     return jsonify({'message': 'Cart cleared.'}), 200
 
@@ -761,7 +740,7 @@ def checkout():
         # Get form data from the request
         data = request.get_json()
         # get the products from the cart
-        products = get_cart(username + "_cart")
+        products = get_cart(user_id)
 
         for element in products:
             element["price"] = float(element["price"])
@@ -788,7 +767,7 @@ def checkout():
             # Create a temporary directory to store the PDF
             with tempfile.TemporaryDirectory() as temp_dir:
                 pdf_path = os.path.join(temp_dir, f'order_{order_id}.pdf')
-                sql_to_pdf(username, pdf_path)
+                sql_to_pdf(user_id, pdf_path)
                 
                 # Send the order confirmation email with the PDF attachment
                 send_email_with_attachment(to, 'Order Confirmation', body, pdf_path)
@@ -799,8 +778,8 @@ def checkout():
             if not is_valid_table_name(cart_table_name):
                 return jsonify({'error': 'Invalid table name.'}), 400
 
-            query = "DELETE FROM {}".format(cart_table_name)
-            db_query(query, ())
+            query = "DELETE FROM carts WHERE user_id = ?"
+            db_query(query, (user_id))
 
 
             # Redirect to a thank you page or any other appropriate page

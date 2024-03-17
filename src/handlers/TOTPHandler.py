@@ -17,15 +17,17 @@ def generate_emergency_codes(id, n_codes=10, code_length=6, reset=False):
         # Generate a random code with code_length numbers
         emergency_codes[generate_emergency_code()] = True
     store_emergency_codes(id, emergency_codes)
-
     return emergency_codes
 
 def get_user_emergency_codes(id):
     if check_existence_emergency_codes(id):
-        query = "SELECT code FROM emergency_codes WHERE id = %s"
-        result = db_query(query, (id,))
+        query = "SELECT emergency_code FROM emergency_codes WHERE user_id = ?"
+        result = db_query(query, (id))
         if result:
-            return result[0][0]
+            dic_result = {}
+            for code in result:
+                dic_result[code[0]] = True
+            return dic_result
     return None
 
 def remove_valid_emergency_code(id, code):
@@ -38,8 +40,9 @@ def remove_valid_emergency_code(id, code):
     return False
 
 def check_existence_emergency_codes(id):
-    query = "SELECT EXISTS(SELECT * FROM emergency_codes WHERE id = %s)"
-    result = db_query(query, (id,))
+    query = "SELECT CASE WHEN EXISTS (SELECT 1 FROM emergency_codes WHERE user_id = ?) THEN 1 ELSE 0 END AS user_exists;"
+    result = db_query(query, (id))
+    print(result)
     if result[0][0]:
         return True
     return False
@@ -48,14 +51,12 @@ def store_emergency_codes(id, emergency_codes):
 
     if check_existence_emergency_codes(id):
         # Delete the entry
-        query = "DELETE FROM emergency_codes WHERE id = %s"
-        db_query(query, (id,))
+        query = "DELETE FROM emergency_codes WHERE user_id = ?"
+        db_query(query, (id))
 
-    # Convert dictionary to a JSON string
-    codes_json = json.dumps(emergency_codes)
-
-    query = "INSERT INTO emergency_codes (id, code, born) VALUES (%s, %s, %s);"
-    db_query(query, (id, codes_json, datetime.now()))
+    for code in emergency_codes:
+        query = "INSERT INTO emergency_codes (user_id, emergency_code, emergency_code_valid, emergency_code_timestamp) VALUES (?, ?, ?, ?);"
+        db_query(query, (id, code, True, datetime.now()))
 
 
 # Function to generate a TOTP secret for a user
@@ -108,8 +109,8 @@ def verify_totp_code(token, secret_key=None):
 
 def get_totp_secret(id):
     # Fetch the secret key for the user
-    query = "SELECT secret_key FROM users WHERE id = %s"
-    result = db_query(query, (id,))
+    query = "SELECT totp_secret_key FROM users WHERE user_id = ?"
+    result = db_query(query, (id))
 
     if result:
         secret_key = result[0][0]

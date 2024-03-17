@@ -20,7 +20,7 @@ def get_user_by_reset_token(reset_token):
 
     # Build the query to retrieve the user's data
     # Secure Query
-    query = "SELECT * FROM users WHERE reset_token = ?"
+    query = "SELECT * FROM users WHERE password_reset_token = ?"
     result = db_query(query, (reset_token))
 
     return result[0] if result else None
@@ -57,11 +57,11 @@ def set_reset_token_for_user(user, reset_token):
     # Build the query to update the reset_token in the user's table
 
     # Secure Query
-    query = "UPDATE users SET reset_token = ? WHERE username = ?"
+    query = "UPDATE users SET password_reset_token = ? WHERE username = ?"
     db_query(query, (reset_token, user))
 
     # Secure Query to set the reset_token_timestamp
-    query = "UPDATE users SET reset_token_timestamp = ? WHERE username = ?"
+    query = "UPDATE users SET password_reset_token_timestamp = ? WHERE username = ?"
     db_query(query, (datetime.now(), user))
 
 
@@ -153,7 +153,7 @@ def validate_login(username, password):
 def get_id_by_username(username):
     # Construct the SQL query
     # Secure Query
-    query = "SELECT id FROM users WHERE username = ?"
+    query = "SELECT user_id FROM users WHERE username = ?"
     result = db_query(query, (username))
 
 
@@ -227,7 +227,7 @@ def send_recovery_password(email):
 
 def check_id_existence(id):
     # Secure Query
-    query = "IF EXISTS(SELECT 1 FROM users WHERE id = ?) SELECT 1 ELSE SELECT 0;"
+    query = "IF EXISTS(SELECT 1 FROM users WHERE user_id = ?) SELECT 1 ELSE SELECT 0;"
     result = db_query(query, (id))
 
     return result[0][0]
@@ -280,20 +280,19 @@ def create_user_folder(id):
         return False
 
 
-def create_user(username, password, email, secret_key):
-    # Generate a unique user id
-    id = str(generate_random_id())
+def create_user(username, password, email, secret_key, secret_key_timestamp):
+
+    id = generate_random_id()
+
+    # Secure Query
+    # Assuming you are using SQL Server
+    query_insert = "INSERT INTO users (user_id, username, hashed_password, email, totp_secret_key, totp_secret_key_timestamp, admin_role) OUTPUT INSERTED.user_id VALUES (?, ?, ?, ?, ?, ?, ?);"
+
+    # Execute the insertion query
+    id = db_query(query_insert, (id, username, password, email, secret_key, secret_key_timestamp, False))[0][0]
 
     # Create a folder for the user
     ans = create_user_folder(id)
-    
-    if ans:
-        # Secure Query
-        # Assuming you are using SQL Server
-        query_insert = "INSERT INTO users (username, password, email, secret_key, role) OUTPUT INSERTED.ID VALUES (?, ?, ?, ?, ?);"
-
-        # Execute the insertion query
-        id = db_query(query_insert, (username, password, email, secret_key, False))[0][0]
 
     # Return the created user
     return id, ans
@@ -340,7 +339,7 @@ def update_username(id, new_username):
 
     # Build the query to update the username in the user's table
     # Secure Query
-    query = "UPDATE users SET username = ? WHERE id = ?"
+    query = "UPDATE users SET username = ? WHERE user_id = ?"
     db_query(query, (new_username, id))
 
 
@@ -348,7 +347,7 @@ def search_user_by_id(id):
 
     # Construct the SQL query
     # Secure Query
-    query = "SELECT * FROM users WHERE id = ?"
+    query = "SELECT * FROM users WHERE user_id = ?"
     result = db_query(query, (id))
 
 
@@ -368,7 +367,7 @@ def update_email(id, email):
 
     # Build the query to update the email in the user's table
     # Secure Query
-    query = "UPDATE users SET email = ? WHERE id = ?"
+    query = "UPDATE users SET email = ? WHERE user_id = ?"
     db_query(query, (email, id))
 
 
@@ -376,14 +375,14 @@ def update_password(username, password):
     id = str(get_id_by_username(username))
     # Build the query to update the password in the user's table
     # Secure Query
-    query = "UPDATE users SET password = ? WHERE id = ?;"
+    query = "UPDATE users SET hashed_password = ? WHERE user_id = ?;"
     db_query(query, (str(password), id))
 
 
 def get_username_by_id(id):
     # Construct the SQL query to retrieve the username
     # Secure Query
-    query = "SELECT username FROM users WHERE id = ?;"
+    query = "SELECT username FROM users WHERE user_id = ?;"
     result = db_query(query, (id))
 
     # Check if the username was found
@@ -396,13 +395,12 @@ def get_username_by_id(id):
 
         # If it wasn't return None
         return None
-    
 
 def get_user_role(id):
 
     # Construct the SQL query to retrieve the username
     # Secure Query
-    query = "SELECT role FROM users WHERE id = ?"
+    query = "SELECT admin_role FROM users WHERE user_id = ?"
     result = db_query(query, (id))
 
     # Check if the username was found
@@ -454,40 +452,38 @@ def calculate_total_price(products):
 
 def get_orders_by_user_id(id):
 
-    username = get_username_by_id(id).lower()
 
-    # Check if table exists
-    # Secure Query
-    table_name = username + "_orders"
-    if not is_valid_table_name(table_name):
-        return None
-
-    query = "SELECT * FROM {};".format(table_name)
-    results = db_query(query)
+    query = "SELECT * FROM orders WHERE user_id = ?;"
+    results = db_query(query, (id))
 
     # Check if the user has any orders
     if not results:
         return None
 
     products = []
+    print("olaaa")
+    product = {}
     for row in results:
+        print(row)
         order_id = row[0]
-        order_address = row[2]
-        order_Date = row[4]
-        for element in row[1]:
-            product__ = get_product_by_id(element)
-            if product__ is not None:
+        product_id = row[2]
+        order_address = row[5]
+        order_date = row[6]
+        quantity = row[3]
 
-                product = {
+        # Get product information by id
+        product__ = get_product_by_id(product_id)
+
+        product = {
                     "order_id" : order_id,
-                    "product_id": element,
-                    "quantity": row[1][element],
+                    "product_id": product_id,
+                    "quantity": quantity,
                     "name": product__["name"],
                     "price": product__["price"],
                     "address": order_address,
-                    "date": order_Date
+                    "date": order_date
                 }
-                products.append(product)
+        products.append(product)
 
     return products
 
@@ -499,20 +495,26 @@ def get_user_data_by_id(id):
 
     # Construct the SQL query to retrieve the username, email and id
     # Secure Query
-    query1 = "SELECT id,username,email FROM users WHERE id = ?"
+    query1 = "SELECT user_id, username, email FROM users WHERE user_id = ?"
     query1_results = db_query(query1, (id))
+    print("Query1")
+    print(query1_results)
     results.append(list(query1_results[0]) if query1_results else [])
 
     # Construct the SQL query to retrieve all the user's orders
     # Secure Query
-    query2 = "SELECT id,products,shipping_address,order_date FROM {}_orders".format(results[0][1].lower())
-    query2_results = db_query(query2)
+    query2 = "SELECT * FROM orders WHERE user_id = ?"
+    query2_results = db_query(query2, (id))
+    print("Query2")
+    print(query2_results)
     results.append(list(query2_results) if query2_results else [])
 
     # Construct the SQL query to retrieve all the user's reviews
     # Secure Query
-    query3 = "SELECT product_id,rating,review FROM reviews WHERE user_id = ?"
+    query3 = "SELECT product_id, rating, review_text FROM reviews WHERE user_id = ?"
     query3_results = db_query(query3, (id))
+    print("Query3")
+    print(query3_results)
     results.append(list(query3_results) if query3_results else [])
 
     counter = 0
@@ -521,7 +523,9 @@ def get_user_data_by_id(id):
             if counter == 0:
                 info['personal_info'] = [{ "User ID" : result[0], "Username" : result[1], "E-mail" : result[2]}]
             elif counter == 1:
-                info['orders'] = [{"Order ID" : order[0], "Product" : get_product_by_id(product)["name"], "Product ID" : product, "Quantity" : order[1][product], "Address" : order[2], "Date" : order[3]} for order in result for product in order[1]]
+                for order in result:
+                    print(order)
+                info['orders'] = [{"Order ID" : order[0], "Product" : get_product_by_id(order[2])["name"], "Product ID" : order[2], "Quantity" : order[3], "Address" : order[5], "Date" : order[6]} for order in result]
             elif counter == 2:
                 info['reviews'] = [{"Product ID" : review[0], "Rating" : review[1], "Review" : review[2]} for review in result]
         counter += 1

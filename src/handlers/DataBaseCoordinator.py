@@ -19,6 +19,22 @@ def read_json(filename):
     return data
 
 
+def read_sql_file(filename, split_rule = ";"):
+    
+        if os.name == "nt":
+            # Get the current working directory
+            current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
+        else:
+            # Get the current working directory
+            current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+    
+        full_file_path = current_directory + filename
+    
+        with open(full_file_path, "r", encoding="utf8") as file:
+            sql_query = file.read()
+        return sql_query
+
+
 def is_valid_table_name(table_name):
     # Define a regular expression pattern to match valid table names
     valid_table_name_pattern = re.compile(r'^[a-zA-Z0-9_]+$')
@@ -75,7 +91,7 @@ def db_query(query, params=None):
     select_in_query = False
 
     # Check if the query has SELECT
-    if "SELECT" in query or "OUTPUT" in query:
+    if ("SELECT" in query or "OUTPUT" in query) and not "CREATE" in query:
 
         # Fetch all the data
         data = cur.fetchall()
@@ -95,103 +111,33 @@ def db_query(query, params=None):
 
         # Return the requested data
         return data
+
+
+def check_database_tables_exist():
+    """
+                    ---------------> users <------ emergency_codes
+                    |                ^   ^
+                    |                |    \
+                    |                |     \
+                    |                carts  \
+                    |                |       \
+                    |                |        \
+                    |                v         \
+                    orders ----> products <--- reviews
+    """
     
+    # Read the SQL files for creating the tables
+    create_table_users = read_sql_file("/queries/create_users_table.sql")
+    create_table_products = read_sql_file("/queries/create_products_table.sql")
+    create_table_emergency_codes = read_sql_file("/queries/create_emergency_codes_table.sql")
+    create_table_carts = read_sql_file("/queries/create_carts_table.sql")
+    create_table_reviews = read_sql_file("/queries/create_reviews_table.sql")
+    create_table_orders = read_sql_file("/queries/create_orders_table.sql")
 
-# Rest of your code...
-
-def check_database_table_exists(table_name):
-    try:
-        if not is_valid_table_name(table_name):
-            return False
-
-        # Secure Query
-        query = "IF EXISTS (SELECT * FROM information_schema.tables WHERE table_name = ?) SELECT 1 ELSE SELECT 0"
-        result = db_query(query, (table_name,))
-
-        if not result[0][0]:
-            if table_name == "users":
-                # Construct the SQL query
-                query = """
-                CREATE TABLE users (
-                    id INT PRIMARY KEY NOT NULL,
-                    username VARCHAR(255) NOT NULL,
-                    password VARCHAR(255) NOT NULL,
-                    reset_token VARCHAR(255),
-                    reset_token_timestamp DATETIMEOFFSET,
-                    email VARCHAR(255) NOT NULL,
-                    secret_key VARCHAR(255) NOT NULL,
-                    role BIT NOT NULL
-                )
-                """
-                db_query(query)
-
-            elif table_name == "products":
-                query = """
-                CREATE TABLE products (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    name NVARCHAR(255),
-                    description NVARCHAR(255),
-                    price NVARCHAR(255),
-                    category NVARCHAR(255),
-                    stock INT
-                )
-                """
-                db_query(query)
-
-            elif table_name == "reviews":
-                query = """
-                CREATE TABLE reviews (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    product_id INT,
-                    user_id INT,
-                    rating INT,
-                    review NVARCHAR(255)
-                )
-                """
-                db_query(query)
-
-            elif table_name == "emergency_codes":
-                query = """
-                CREATE TABLE emergency_codes (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    code NVARCHAR(MAX),
-                    born TIMESTAMP
-                )
-                """
-                db_query(query)
-
-            elif "_cart" in table_name:
-                # Construct the SQL query
-                query = f"""
-                CREATE TABLE {table_name} (
-                    product_id INT PRIMARY KEY IDENTITY(1,1),
-                    quantity INT
-                )
-                """
-                db_query(query)
-
-            elif "all_orders" in table_name:
-                query = """
-                CREATE TABLE all_orders (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    user_id INT,
-                    order_date NVARCHAR(255)
-                )
-                """
-                db_query(query)
-
-            else:
-                # Construct the SQL query
-                query = f"""
-                CREATE TABLE {table_name} (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    products NVARCHAR(MAX),
-                    total_price NVARCHAR(255),
-                    shipping_address NVARCHAR(255),
-                    order_date NVARCHAR(255)
-                )
-                """
-                db_query(query)
-
-    except Exception as e:
-        print(e)
+    # Execute the SQL queries for creating the tables
+    db_query(create_table_users)
+    db_query(create_table_products)
+    db_query(create_table_emergency_codes)
+    db_query(create_table_carts)
+    db_query(create_table_reviews)
+    db_query(create_table_orders)

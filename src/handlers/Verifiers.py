@@ -6,8 +6,8 @@ def check_username_exists(username):
 
     # Execute the query to check if the username exists in the user's table
     # Secure Query
-    query = "SELECT exists(select 1 from users where username=%s);"
-    result = db_query(query, (username,))
+    query = "SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE username = ?) THEN 1 ELSE 0 END;"
+    result = db_query(query, (username))
 
     # Return the boolean
     return result[0][0]
@@ -36,22 +36,18 @@ def check_email_exists(email):
 
     #Execute the query to check if the email exists in the user's table
     # Secure Query
-    query = "SELECT exists(select 1 from users where email=%s);"
-    result = db_query(query, (email,))
+    query = "SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE email = ?) THEN 1 ELSE 0 END;"
+    result = db_query(query, (email))
 
     # Return the boolean
     return result[0][0]
 
 
-def check_product_in_cart(tablename, product_id):
-    
-    # Secure Query: Validate the table name
-    if not is_valid_table_name(tablename):
-        return False
+def check_product_in_cart(user_id, product_id):
 
     # Secure Query: Check if the product exists in the cart
-    query = f"SELECT exists(SELECT 1 FROM {tablename} WHERE product_id=%s);"
-    result = db_query(query, (product_id,))
+    query = "SELECT COUNT(*) FROM carts WHERE product_id=? AND user_id=?"
+    result = db_query(query, (product_id, user_id))
 
     # Return the boolean
     return result[0][0]
