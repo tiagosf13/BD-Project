@@ -11,17 +11,17 @@ from datetime import datetime, timedelta  # For working with token expiration
 def clear_reset_token(user):
     # Build the query to update the reset_token in the user's table
     # Secure Query
-    query = "UPDATE users SET reset_token = NULL WHERE username = %s;"
-    db_query(query, (user,))
-    query = "UPDATE users SET reset_token_timestamp = NULL WHERE username = %s;"
-    db_query(query, (user,))
+    query = "UPDATE users SET reset_token = NULL WHERE username = ?;"
+    db_query(query, (user))
+    query = "UPDATE users SET reset_token_timestamp = NULL WHERE username = ?;"
+    db_query(query, (user))
 
 def get_user_by_reset_token(reset_token):
 
     # Build the query to retrieve the user's data
     # Secure Query
-    query = "SELECT * FROM users WHERE reset_token = %s"
-    result = db_query(query, (reset_token,))
+    query = "SELECT * FROM users WHERE reset_token = ?"
+    result = db_query(query, (reset_token))
 
     return result[0] if result else None
 
@@ -57,11 +57,11 @@ def set_reset_token_for_user(user, reset_token):
     # Build the query to update the reset_token in the user's table
 
     # Secure Query
-    query = "UPDATE users SET reset_token = %s WHERE username = %s"
+    query = "UPDATE users SET reset_token = ? WHERE username = ?"
     db_query(query, (reset_token, user))
 
     # Secure Query to set the reset_token_timestamp
-    query = "UPDATE users SET reset_token_timestamp = %s WHERE username = %s"
+    query = "UPDATE users SET reset_token_timestamp = ? WHERE username = ?"
     db_query(query, (datetime.now(), user))
 
 
@@ -94,8 +94,8 @@ def send_password_reset_email(email, reset_token):
 def search_user_by_username(username):
 
     # Secure Query
-    query = "SELECT * FROM users WHERE username = %s"
-    result = db_query(query, (username,))
+    query = "SELECT * FROM users WHERE username = ?"
+    result = db_query(query, (username))
 
 
     # If no user is found, return None
@@ -109,8 +109,8 @@ def search_user_by_username(username):
 def search_user_by_email(email):
 
     # Secure Query
-    query = "SELECT * FROM users WHERE email = %s"
-    result = db_query(query, (email,))
+    query = "SELECT * FROM users WHERE email = ?"
+    result = db_query(query, (email))
 
 
     # If no user is found, return None
@@ -131,8 +131,8 @@ def validate_login(username, password):
         
         # Fetch the user's password
         # Secure Query
-        query = "SELECT password FROM users WHERE username = %s"
-        result = db_query(query, (username,))
+        query = "SELECT password FROM users WHERE username = ?"
+        result = db_query(query, (username))
 
 
         # Check if there is a password
@@ -153,8 +153,8 @@ def validate_login(username, password):
 def get_id_by_username(username):
     # Construct the SQL query
     # Secure Query
-    query = "SELECT id FROM users WHERE username = %s"
-    result = db_query(query, (username,))
+    query = "SELECT id FROM users WHERE username = ?"
+    result = db_query(query, (username))
 
 
     # Check if 
@@ -227,16 +227,16 @@ def send_recovery_password(email):
 
 def check_id_existence(id):
     # Secure Query
-    query = "SELECT EXISTS(SELECT 1 FROM users WHERE id = %s);"
-    result = db_query(query, (id,))
+    query = "IF EXISTS(SELECT 1 FROM users WHERE id = ?) SELECT 1 ELSE SELECT 0;"
+    result = db_query(query, (id))
 
     return result[0][0]
 
 
 def check_order_id_existence(id):
     # Secure Query
-    query = "SELECT EXISTS(SELECT 1 FROM all_orders WHERE id = %s);"
-    result = db_query(query, (id,))
+    query = "IF EXISTS(SELECT 1 FROM all_orders WHERE id = ?) SELECT 1 ELSE SELECT 0;"
+    result = db_query(query, (id))
 
     return result[0][0]
 
@@ -280,7 +280,7 @@ def create_user_folder(id):
         return False
 
 
-def create_user(username, password, email, secret_key, secret_key_timestamp):
+def create_user(username, password, email, secret_key):
     # Generate a unique user id
     id = str(generate_random_id())
 
@@ -288,20 +288,23 @@ def create_user(username, password, email, secret_key, secret_key_timestamp):
     ans = create_user_folder(id)
     
     if ans:
-        # Add the user to the USER table
         # Secure Query
-        query = "INSERT INTO users (id, username, password, email, secret_key, secret_key_timestamp, admin) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-        db_query(query, (id, username, password, email, secret_key, secret_key_timestamp, False))
-    
+        # Assuming you are using SQL Server
+        query_insert = "INSERT INTO users (username, password, email, secret_key, role) OUTPUT INSERTED.ID VALUES (?, ?, ?, ?, ?);"
+
+        # Execute the insertion query
+        id = db_query(query_insert, (username, password, email, secret_key, False))[0][0]
+
     # Return the created user
     return id, ans
+
 
 
 def change_password(id, password):
 
     # Build the query to update the password in the user's table
     # Secure Query
-    query = 'UPDATE users SET password = %s WHERE id = %s'
+    query = 'UPDATE users SET password = ? WHERE id = ?'
     db_query(query, (password, id))
 
 
@@ -312,8 +315,8 @@ def update_username(id, new_username):
     
     # Construct the SQL query
     # Secure Query
-    query = "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name=%s);"
-    result = db_query(query, (old_username+"_cart",))
+    query = "IF EXISTS(SELECT * FROM information_schema.tables WHERE table_name=?) SELECT 1 ELSE SELECT 0;"
+    result = db_query(query, (old_username+"_cart"))
 
 
     if result[0][0]:
@@ -324,8 +327,8 @@ def update_username(id, new_username):
         db_query(query)
 
 
-    query = "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name=%s);"
-    result = db_query(query, (old_username+"_orders",))
+    query = "IF EXISTS(SELECT * FROM information_schema.tables WHERE table_name=?) SELECT 1 ELSE SELECT 0;"
+    result = db_query(query, (old_username+"_orders"))
     
     if result[0][0]:
 
@@ -337,7 +340,7 @@ def update_username(id, new_username):
 
     # Build the query to update the username in the user's table
     # Secure Query
-    query = "UPDATE users SET username = %s WHERE id = %s"
+    query = "UPDATE users SET username = ? WHERE id = ?"
     db_query(query, (new_username, id))
 
 
@@ -345,8 +348,8 @@ def search_user_by_id(id):
 
     # Construct the SQL query
     # Secure Query
-    query = "SELECT * FROM users WHERE id = %s"
-    result = db_query(query, (id,))
+    query = "SELECT * FROM users WHERE id = ?"
+    result = db_query(query, (id))
 
 
     # If no user is found, return None
@@ -365,7 +368,7 @@ def update_email(id, email):
 
     # Build the query to update the email in the user's table
     # Secure Query
-    query = "UPDATE users SET email = %s WHERE id = %s"
+    query = "UPDATE users SET email = ? WHERE id = ?"
     db_query(query, (email, id))
 
 
@@ -373,15 +376,15 @@ def update_password(username, password):
     id = str(get_id_by_username(username))
     # Build the query to update the password in the user's table
     # Secure Query
-    query = "UPDATE users SET password = %s WHERE id = %s;"
+    query = "UPDATE users SET password = ? WHERE id = ?;"
     db_query(query, (str(password), id))
 
 
 def get_username_by_id(id):
     # Construct the SQL query to retrieve the username
     # Secure Query
-    query = "SELECT username FROM users WHERE id = %s;"
-    result = db_query(query, (id,))
+    query = "SELECT username FROM users WHERE id = ?;"
+    result = db_query(query, (id))
 
     # Check if the username was found
     if result:
@@ -399,8 +402,8 @@ def get_user_role(id):
 
     # Construct the SQL query to retrieve the username
     # Secure Query
-    query = "SELECT admin FROM users WHERE id = %s"
-    result = db_query(query, (id,))
+    query = "SELECT role FROM users WHERE id = ?"
+    result = db_query(query, (id))
 
     # Check if the username was found
     if result:
@@ -496,8 +499,8 @@ def get_user_data_by_id(id):
 
     # Construct the SQL query to retrieve the username, email and id
     # Secure Query
-    query1 = "SELECT id,username,email FROM users WHERE id = %s"
-    query1_results = db_query(query1, (id,))
+    query1 = "SELECT id,username,email FROM users WHERE id = ?"
+    query1_results = db_query(query1, (id))
     results.append(list(query1_results[0]) if query1_results else [])
 
     # Construct the SQL query to retrieve all the user's orders
@@ -508,8 +511,8 @@ def get_user_data_by_id(id):
 
     # Construct the SQL query to retrieve all the user's reviews
     # Secure Query
-    query3 = "SELECT product_id,rating,review FROM reviews WHERE user_id = %s"
-    query3_results = db_query(query3, (id,))
+    query3 = "SELECT product_id,rating,review FROM reviews WHERE user_id = ?"
+    query3_results = db_query(query3, (id))
     results.append(list(query3_results) if query3_results else [])
 
     counter = 0

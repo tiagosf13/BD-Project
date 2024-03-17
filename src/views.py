@@ -134,7 +134,9 @@ def verify_totp_signup():
         secret_key_timestamp = session.get("secret_key_timestamp")
 
         # Create the user in the database with the hashed password
-        id, ans = create_user(username, hashed_password, email, secret_key, secret_key_timestamp)
+        id, ans = create_user(username, hashed_password, email, secret_key)
+
+        print(ans, id)
 
         # Clear the session variables
         session.pop("signup_hashed_password", None)
@@ -222,8 +224,10 @@ def verify_totp_login(id):
         
         if username is None or token is None:
             return render_template("login.html", message="Invalid TOTP code. Please try again.")
-        
-        verified = verify_totp_code(id, token, 'users', username=username)
+
+        secret_key = get_totp_secret(id)
+
+        verified = verify_totp_code(token, secret_key)
 
         # Verify the TOTP code
         if verified == True:
@@ -852,7 +856,6 @@ def get_user_data(id):
 @views.route('/verify-password', methods=['POST'])
 def verify_password():
     data = request.get_json()
-    print(data)
     password = data.get('password')
 
     if not password:
