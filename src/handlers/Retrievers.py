@@ -73,7 +73,6 @@ def get_product_by_id(id):
             "stock": row[5],
             "available" : row[6]
         }
-        print(product)
         return product
     
 

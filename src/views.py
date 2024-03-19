@@ -132,8 +132,6 @@ def verify_totp_signup():
         # Create the user in the database with the hashed password
         id, ans = create_user(username, hashed_password, email, secret_key, secret_key_timestamp)
 
-        print(ans, id)
-
         # Clear the session variables
         session.pop("signup_hashed_password", None)
         session.pop("signup_username", None)
@@ -201,8 +199,7 @@ def get_emergency_codes(id):
 
     # Generate 10 emergency codes, each with 15 characters (Upper case letters, Lower case letters, Special characters and numbers)
     codes = generate_emergency_codes(id)
-    print("codes")
-    print(codes)
+
     # Logic to fetch codes (replace with your actual data retrieval)
     return jsonify({'codes': codes})
 
@@ -217,28 +214,23 @@ def verify_totp_login(id):
         return render_template("totp_login.html", id=id)
     else:
         username = search_user_by_id(id)[1]
-        print("username "+username)
+
         token = request.get_json().get("token") if request.is_json else None
-        print("token"+token)
+
         if username is None or token is None:
             return render_template("login.html", message="Invalid TOTP code. Please try again.")
 
         secret_key = get_totp_secret(id)
 
-        print("secret_key "+secret_key)
-
         verified = verify_totp_code(token, secret_key)
 
-        print("verified "+str(verified))
 
         # Verify the TOTP code
         if verified == True:
             # Set session variables
             session["username"] = username
             session["id"] = id
-            print("id "+str(id))
             session["admin"] = get_user_role(session["id"])
-            print("admin "+str(session["admin"]))
             return jsonify({'message': 'Login successful.'}), 200
         else:
 
@@ -370,75 +362,75 @@ def update_account(id):
     if id == None and session.get("id") == None:
         return redirect(url_for("views.login"))
     
-    #try:
+    try:
     
-    if os.name == "nt":
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-    else:
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
-        
-    accounts_directory = os.path.join(current_directory, "database", "accounts")
-    os.makedirs(accounts_directory, exist_ok=True)  # Ensure the directory exists
-
-    file_path = os.path.join(accounts_directory, f"{id}.png").replace("\\", "/")
-
-    # Get the new uploaded user's account image
-    profile_photo = request.files.get("profile_photo")
-
-    # If there is an image and the size is less than 5MB
-    if profile_photo and not profile_photo.content_length > 5120 * 5120:
-        # Save the image to the user's account
-        profile_photo.save(file_path)
-
-    # Get the username, email, and password from the user's session
-    username = request.form.get("username")
-    email = request.form.get("email")
-    password = request.form.get("psw")
-    old_password = request.form.get("psw-old")
-
-    # Check if the username field wasn't empty and occupied by another user
-    if username != "" and not check_username_exists(username) and is_valid_input(username):
-
-        # Update the username
-        update_username(id, username)
-
-        # Set the session's username
-        session["username"] = username
-
-    else:
-        # If there is a problem with the username, get the username based on the ID
-        username = search_user_by_id(id)[1]
-
-    # Check if the email field wasn't empty and occupied by another user
-    if email != "" and not check_email_exists(email) and is_valid_input(email):
-
-        # Update the email
-        update_email(id, email)
-
-    else:
-        # If there is a problem with the email, get the email based on the ID
-        email = search_user_by_id(id)[3]
-
-    # Check if the password wasn't empty
-    if password != "":
-        # Update the password
-        # Hash the password before storing it in the database
-
-        if bcrypt.check_password_hash(search_user_by_id(id)[2], old_password):
-            hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-            username = search_user_by_id(id)[1]
-            update_password(username, hashed_password)
+        if os.name == "nt":
+            # Get the current working directory
+            current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
         else:
-            return render_template("profile.html", message="Invalid password.", username=username, id=id)
+            # Get the current working directory
+            current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+            
+        accounts_directory = os.path.join(current_directory, "database", "accounts")
+        os.makedirs(accounts_directory, exist_ok=True)  # Ensure the directory exists
 
-    # Return the profile page
-    return redirect(url_for("views.catalog", id=id))
+        file_path = os.path.join(accounts_directory, f"{id}.png").replace("\\", "/")
+
+        # Get the new uploaded user's account image
+        profile_photo = request.files.get("profile_photo")
+
+        # If there is an image and the size is less than 5MB
+        if profile_photo and not profile_photo.content_length > 5120 * 5120:
+            # Save the image to the user's account
+            profile_photo.save(file_path)
+
+        # Get the username, email, and password from the user's session
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("psw")
+        old_password = request.form.get("psw-old")
+
+        # Check if the username field wasn't empty and occupied by another user
+        if username != "" and not check_username_exists(username) and is_valid_input(username):
+
+            # Update the username
+            update_username(id, username)
+
+            # Set the session's username
+            session["username"] = username
+
+        else:
+            # If there is a problem with the username, get the username based on the ID
+            username = search_user_by_id(id)[1]
+
+        # Check if the email field wasn't empty and occupied by another user
+        if email != "" and not check_email_exists(email) and is_valid_input(email):
+
+            # Update the email
+            update_email(id, email)
+
+        else:
+            # If there is a problem with the email, get the email based on the ID
+            email = search_user_by_id(id)[3]
+
+        # Check if the password wasn't empty
+        if password != "":
+            # Update the password
+            # Hash the password before storing it in the database
+
+            if bcrypt.check_password_hash(search_user_by_id(id)[2], old_password):
+                hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+                username = search_user_by_id(id)[1]
+                update_password(username, hashed_password)
+            else:
+                return render_template("profile.html", message="Invalid password.", username=username, id=id)
+
+        # Return the profile page
+        return redirect(url_for("views.catalog", id=id))
     
-    #except Exception as e:
-    #    print(e)
-    #    return render_template("profile.html", message="Invalid input.", username=username, id=id)
+    except Exception as e:
+        print(e)
+        return render_template("profile.html", message="Invalid input.", username=username, id=id)
 
 
 # This view is used to get a image
@@ -648,7 +640,6 @@ def add_item_to_cart(product_id):
         quantity = data.get('quantity')
 
         if quantity <= 0:
-            print("Invalid quantity.")
             return jsonify({'error': 'Invalid quantity.'}), 500
         
         # Secure Query
@@ -657,10 +648,8 @@ def add_item_to_cart(product_id):
         product_stock = get_product_by_id(product_id)["stock"]
 
         if result != [] and result[0][2] + quantity > product_stock:
-            print("Not enough stock.")
             return jsonify({'error': 'Not enough stock.'}), 500
         elif result == [] and (quantity > product_stock):
-            print("Not enough stock.1")
             return jsonify({'error': 'Not enough stock.'}), 500
         else:
             set_cart_item(id, product_id, quantity, "add")
@@ -826,8 +815,6 @@ def orders(id):
 
     if products == None:
         return render_template('orders.html', products=[])
-    
-    print(products)
 
     return render_template('orders.html', products=products)
 

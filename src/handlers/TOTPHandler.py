@@ -42,7 +42,6 @@ def remove_valid_emergency_code(id, code):
 def check_existence_emergency_codes(id):
     query = "SELECT CASE WHEN EXISTS (SELECT 1 FROM emergency_codes WHERE user_id = ?) THEN 1 ELSE 0 END AS user_exists;"
     result = db_query(query, (id))
-    print(result)
     if result[0][0]:
         return True
     return False

@@ -457,7 +457,6 @@ def get_orders_by_user_id(id):
     products = []
     product = {}
     for row in results:
-        print(row)
         order_id = row[0]
         product_id = row[2]
         order_address = row[5]
@@ -498,24 +497,18 @@ def get_user_data_by_id(id):
     # Secure Query
     query1 = "SELECT user_id, username, email FROM users WHERE user_id = ?"
     query1_results = db_query(query1, (id))
-    print("Query1")
-    print(query1_results)
     results.append(list(query1_results[0]) if query1_results else [])
 
     # Construct the SQL query to retrieve all the user's orders
     # Secure Query
     query2 = "SELECT * FROM orders WHERE user_id = ?"
     query2_results = db_query(query2, (id))
-    print("Query2")
-    print(query2_results)
     results.append(list(query2_results) if query2_results else [])
 
     # Construct the SQL query to retrieve all the user's reviews
     # Secure Query
     query3 = "SELECT product_id, rating, review_text FROM reviews WHERE user_id = ?"
     query3_results = db_query(query3, (id))
-    print("Query3")
-    print(query3_results)
     results.append(list(query3_results) if query3_results else [])
 
     counter = 0
@@ -524,8 +517,6 @@ def get_user_data_by_id(id):
             if counter == 0:
                 info['personal_info'] = [{ "User ID" : result[0], "Username" : result[1], "E-mail" : result[2]}]
             elif counter == 1:
-                for order in result:
-                    print(order)
                 info['orders'] = [{"Order ID" : order[0], "Product" : get_product_by_id(order[2])["name"], "Product ID" : order[2], "Quantity" : order[3], "Address" : order[5], "Date" : order[6]} for order in result]
             elif counter == 2:
                 info['reviews'] = [{"Product ID" : review[0], "Rating" : review[1], "Review" : review[2]} for review in result]
@@ -567,8 +558,6 @@ def generate_excel_user_data(id):
     else:
         # Get the current working directory
         current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
-
-    print(current_directory)
 
     # Check if the directory exists
     user_data_directory = os.path.join(current_directory, "database", "user_data")
