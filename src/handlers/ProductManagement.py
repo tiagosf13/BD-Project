@@ -16,6 +16,14 @@ def verify_product_exists(product_name):
     else:
         return True
 
+def check_product_availability(product_id):
+
+    # Secure Query: Check if the ID exists in the specified table
+    query = "SELECT available FROM products WHERE product_id = ?;"
+    results = db_query(query, (product_id))
+
+    return results[0][0] if results else False
+
 
 def verify_id_exists(id, table):
 
@@ -89,8 +97,8 @@ def create_product(product_name, product_description, product_price, product_cat
     
     # Add the user to the USER table
     # Secure Query
-    db_query("INSERT INTO products (product_id, product_name, product_description, price, category, stock) VALUES (?, ?, ?, ?, ?, ?);",
-            (id, product_name, product_description, product_price, product_category, product_quantity)
+    db_query("INSERT INTO products (product_id, product_name, product_description, price, category, stock, available) VALUES (?, ?, ?, ?, ?, ?, ?);",
+            (id, product_name, product_description, product_price, product_category, product_quantity, True)
     )
 
     # Create a folder for the user
@@ -101,27 +109,21 @@ def create_product(product_name, product_description, product_price, product_cat
 
 
 def remove_product(id):
-    # Secure Query
-    query = "DELETE FROM products WHERE product_id = ?"
+
+    # Secure Query to delete the product from the carts
+    query = "DELETE FROM carts WHERE product_id = ?;"
     db_query(query, (id))
 
-
-    # Get the current working directory
-    directory = os.getcwd()
-
-    # Define the path for the user's directory
-    user_directory = os.path.join(directory, "catalog")
-
-    # Create the user's directory and any missing parent directories
-    if os.path.exists(os.path.join(user_directory, f"{id}.png")):
-        os.remove(os.path.join(user_directory, f"{id}.png"))
+    # Secure Query
+    query = "UPDATE products SET available = 0 WHERE product_id = ?;"
+    db_query(query, (id))
 
     return True
 
 
 def update_product_name(id, name):
     # Secure Query
-    query = "UPDATE products SET name = %s WHERE id = %s"
+    query = "UPDATE products SET product_name = ? WHERE product_id = ?;"
     db_query(query, (name, id))
 
     return True
@@ -129,7 +131,7 @@ def update_product_name(id, name):
 
 def update_product_description(id, description):
     # Secure Query
-    query = "UPDATE products SET description = %s WHERE id = %s"
+    query = "UPDATE products SET product_description = ? WHERE product_id = ?;"
     db_query(query, (description, id))
 
     return True
@@ -137,7 +139,7 @@ def update_product_description(id, description):
 
 def update_product_price(id, price):
     # Secure Query
-    query = "UPDATE products SET price = %s WHERE id = %s"
+    query = "UPDATE products SET price = ? WHERE product_id = ?"
     db_query(query, (price, id))
 
     return True
@@ -146,7 +148,7 @@ def update_product_price(id, price):
 def update_product_category(id, category):
     
     # Secure Query
-    query = "UPDATE products SET category = %s WHERE id = %s"
+    query = "UPDATE products SET category = ? WHERE product_id = ?"
     db_query(query, (category, id))
 
     return True

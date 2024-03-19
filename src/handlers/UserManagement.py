@@ -398,22 +398,16 @@ def get_username_by_id(id):
 
 def get_user_role(id):
 
+    if not id:
+        return False
+
     # Construct the SQL query to retrieve the username
     # Secure Query
-    query = "SELECT admin_role FROM users WHERE user_id = ?"
+    query = "SELECT admin_role FROM users WHERE user_id = ?;"
     result = db_query(query, (id))
 
     # Check if the username was found
-    if result:
-
-        # If it was, return the username
-        return result[0][0]
-
-    else:
-
-        # If it wasn't return None
-        return None
-
+    return result[0][0] if result else None
 
 def compose_email_body(products, order_id):
     # Read the HTML and CSS files
@@ -461,7 +455,6 @@ def get_orders_by_user_id(id):
         return None
 
     products = []
-    print("olaaa")
     product = {}
     for row in results:
         print(row)
@@ -469,6 +462,13 @@ def get_orders_by_user_id(id):
         product_id = row[2]
         order_address = row[5]
         order_date = row[6]
+
+        # Remove milliseconds part from the string
+        order_date_str_without_ms = order_date.split('.')[0]
+
+        # Convert the string to a datetime object
+        order_date = datetime.strptime(order_date_str_without_ms, "%Y-%m-%d %H:%M:%S")
+        
         quantity = row[3]
 
         # Get product information by id
@@ -477,6 +477,7 @@ def get_orders_by_user_id(id):
         product = {
                     "order_id" : order_id,
                     "product_id": product_id,
+                    "product_available": product__["available"],
                     "quantity": quantity,
                     "name": product__["name"],
                     "price": product__["price"],

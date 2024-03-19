@@ -8,9 +8,10 @@ BEGIN
         product_id INT NOT NULL,
         product_name VARCHAR(255) NOT NULL,
         product_description VARCHAR(255) NOT NULL,
-        price MONEY NOT NULL,
+        price DECIMAL(10, 2) NOT NULL,
         category VARCHAR(255) NOT NULL,
         stock INT NOT NULL,
+        available BIT NOT NULL,
         PRIMARY KEY (product_id)
     );
 END

@@ -91,7 +91,7 @@ BEGIN
         user_id INT NOT NULL,
         product_id INT NOT NULL,
         quantity INT NOT NULL,
-        total_price MONEY NOT NULL,
+        total_price DECIMAL(10, 2) NOT NULL,
         shipping_address VARCHAR(255) NOT NULL,
         order_date DATETIMEOFFSET NOT NULL,
         PRIMARY KEY (order_id, user_id, product_id),

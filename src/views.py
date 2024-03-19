@@ -7,7 +7,7 @@ from handlers.UserManagement import update_username, search_user_by_id, update_e
 from handlers.UserManagement import get_user_role, compose_email_body, update_password, generate_reset_token, set_reset_token_for_user
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
 from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
-from handlers.ProductManagement import update_product_description, update_product_price, update_product_category, update_product_quantity
+from handlers.ProductManagement import update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
 from handlers.DataBaseCoordinator import check_database_tables_exist, db_query, is_valid_table_name
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
@@ -121,8 +121,6 @@ def verify_totp_signup():
 
     secret_key = session.get("secret_key")
 
-    print(inserted_totp, secret_key)
-    print("aqui")
     # Verify the TOTP code
     if verify_totp_code(inserted_totp, secret_key):
 
@@ -219,22 +217,28 @@ def verify_totp_login(id):
         return render_template("totp_login.html", id=id)
     else:
         username = search_user_by_id(id)[1]
+        print("username "+username)
         token = request.get_json().get("token") if request.is_json else None
-        
+        print("token"+token)
         if username is None or token is None:
             return render_template("login.html", message="Invalid TOTP code. Please try again.")
 
         secret_key = get_totp_secret(id)
 
+        print("secret_key "+secret_key)
+
         verified = verify_totp_code(token, secret_key)
+
+        print("verified "+str(verified))
 
         # Verify the TOTP code
         if verified == True:
             # Set session variables
             session["username"] = username
             session["id"] = id
+            print("id "+str(id))
             session["admin"] = get_user_role(session["id"])
-
+            print("admin "+str(session["admin"]))
             return jsonify({'message': 'Login successful.'}), 200
         else:
 
@@ -512,7 +516,7 @@ def remove_product_by_id(id):
     # Updated route name and parameter name to avoid conflicts
     product_id = request.form.get("productId")
 
-    if is_valid_input(product_id) != False and id is not None and verify_id_exists(product_id, "products"):
+    if is_valid_input(product_id) != False and id is not None and verify_id_exists(product_id, "products") and check_product_availability(product_id) == True:
         # Assuming 'remove_product' is a function you've defined elsewhere, you can use it here
         remove_product(product_id)
 
@@ -567,12 +571,14 @@ def product_page(product_id):
     # Fetch the product details based on the product_id
     # You can retrieve the product information from your data source
     id = session.get("id")
+    
+    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
+        return redirect(url_for("views.catalog", id=id))
+    
     product = get_product_by_id(product_id)
     admin = get_user_role(id)
 
-    if verify_id_exists(product_id, "products") == False:
-        return redirect(url_for("views.catalog", id=id))
-    elif id == None:
+    if id == None:
         # Pass the product details to the template
         return render_template('product_anonymous.html', product = product)
     elif admin:
@@ -584,6 +590,9 @@ def product_page(product_id):
 
 @views.route('/get_reviews/<int:product_id>/', methods=['GET'])
 def get_reviews(product_id):
+
+    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
+        return jsonify([])
 
     reviews = get_product_reviews(product_id)
 
@@ -598,6 +607,9 @@ def get_reviews(product_id):
 
 @views.route('/add_review/<product_id>/', methods=['POST'])
 def add_review(product_id):
+
+    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
+        return redirect(url_for("views.catalog", id=session.get("id")))
 
     # Get the user's id and username from the session
     user_id = session.get("id")
@@ -628,7 +640,7 @@ def add_item_to_cart(product_id):
     id = session.get("id")
     if id == None:
         return redirect(url_for("views.login"))
-    elif verify_id_exists(product_id, "products") == False:
+    elif verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
         return redirect(url_for("views.catalog", id=id))
     
     try:
@@ -667,7 +679,7 @@ def remove_item_from_cart(product_id):
     if id == None:
         return redirect(url_for("views.login"))
     
-    elif verify_id_exists(product_id, "products") == False:
+    elif verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
         return redirect(url_for("views.catalog", id=id))
 
     try:
@@ -814,6 +826,8 @@ def orders(id):
 
     if products == None:
         return render_template('orders.html', products=[])
+    
+    print(products)
 
     return render_template('orders.html', products=products)
 

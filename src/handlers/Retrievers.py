@@ -28,7 +28,7 @@ def get_orders(username_orders):
 
 def get_all_products():
     # Secure Query - Select specific columns
-    query = "SELECT product_id, product_name, product_description, price, category, stock FROM products"
+    query = "SELECT product_id, product_name, product_description, price, category, stock, available FROM products"
     results = db_query(query)
     
     # Fetch all rows in one go and convert to a list of dictionaries
@@ -39,7 +39,7 @@ def get_all_products():
         "price": row[3],
         "category": row[4],
         "stock": row[5]
-    } for row in results]
+    } for row in results if row[6] == True]
     
     return products
 
@@ -70,7 +70,8 @@ def get_product_by_id(id):
             "description": row[2],
             "price": row[3],
             "category": row[4],
-            "stock": row[5]
+            "stock": row[5],
+            "available" : row[6]
         }
         print(product)
         return product
@@ -100,6 +101,15 @@ def get_product_reviews(product_id):
     return reviews
 
 
+def check_product_availability(product_id):
+
+    # Secure Query: Check if the ID exists in the specified table
+    query = "SELECT available FROM products WHERE product_id = ?;"
+    results = db_query(query, (product_id))
+
+    return results[0][0] if results else False
+
+
 def get_cart(user_id):
 
     query = "SELECT * FROM carts WHERE user_id=?;"
@@ -108,8 +118,7 @@ def get_cart(user_id):
     cart = []
 
     for element in result:
-        print(element)
-        if not ((verify_product_id_exists(element[1]) and element[2] > 0 and element[2] <= get_product_by_id(element[1])["stock"])):
+        if not ((check_product_availability(element[1]) and verify_product_id_exists(element[1]) and element[2] > 0 and element[2] <= get_product_by_id(element[1])["stock"])):
             delete_query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?;"
             db_query(delete_query, (element[1], user_id))
 

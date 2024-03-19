@@ -38,7 +38,9 @@
                         <td>{{ product.quantity }}</td>
                         <td>{{ product.price }} €</td>
                         <td>{{ product.date }}</td>
-                        <td><i class="fas fa-cart-plus reorderButton cart-button" data-product='{{ product|tojson|safe }}' id="reorderButton"></i></td>
+                        {% if product.product_available == 1 %}
+                            <td><i class="fas fa-cart-plus reorderButton cart-button" data-product='{{ product|tojson|safe }}' id="reorderButton"></i></td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>
