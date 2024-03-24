@@ -1,4 +1,4 @@
-import os, json, psycopg2, re
+import os, json, pyodbc
 
 
 def read_json(filename):
