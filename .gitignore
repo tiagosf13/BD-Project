@@ -1,5 +1,6 @@
 *.docx
-app_sec/credentials/DataBaseCredentials.json
-app_sec/credentials/EmailCredentials.json
+src/credentials/DataBaseCredentials.json
+src/credentials/EmailCredentials.json
 *.xlsx
 *.pyc
+venv
