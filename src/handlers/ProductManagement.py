@@ -1,33 +1,41 @@
-import random, os, json
+import random, os
 from datetime import datetime
 from handlers.Retrievers import get_product_by_id
 from handlers.DataBaseCoordinator import db_query
 from handlers.Verifiers import is_valid_table_name
 
 
-def verify_product_exists(id, table):
-    # Secure Query: Validate the table name
-    if not is_valid_table_name(table):
-        return False  # Return an error or handle it appropriately
+def verify_product_exists(product_name):
 
     # Secure Query: Check if the ID exists in the specified table
-    query = "SELECT * FROM {} WHERE name = %s;".format(table)
-    results = db_query(query, (id,))
+    query = "SELECT * FROM products WHERE product_name = ?;"
+    results = db_query(query, (product_name))
 
     if len(results) == 0:
         return False
     else:
         return True
 
-
-def verify_id_exists(id, table):
-    # Secure Query: Validate the table name
-    if not is_valid_table_name(table):
-        return False  # Return an error or handle it appropriately
+def check_product_availability(product_id):
 
     # Secure Query: Check if the ID exists in the specified table
-    query = "SELECT * FROM {} WHERE id = %s;".format(table)
-    results = db_query(query, (id,))
+    query = "SELECT available FROM products WHERE product_id = ?;"
+    results = db_query(query, (product_id))
+
+    return results[0][0] if results else False
+
+
+def verify_id_exists(id, table):
+
+    # Secure Query: Check if the ID exists in the specified table
+    if table == "products":
+        query = "SELECT * FROM products WHERE product_id = ?;"
+    elif table == "reviews":
+        query = "SELECT * FROM reviews WHERE review_id = ?;"
+    elif table == "orders":
+        query = "SELECT * FROM orders WHERE order_id = ?;"
+
+    results = db_query(query, (id))
 
     if len(results) == 0:
         return False
@@ -81,7 +89,7 @@ def create_product_image(id, product_photo):
 def create_product(product_name, product_description, product_price, product_category, product_quantity, product_photo):
 
     # check if the product already exists
-    if verify_product_exists(product_name, "products"):
+    if verify_product_exists(product_name):
         return None
 
     # Generate a unique user id
@@ -89,8 +97,8 @@ def create_product(product_name, product_description, product_price, product_cat
     
     # Add the user to the USER table
     # Secure Query
-    db_query("INSERT INTO products (id, name, description, price, category, stock) VALUES (%s, %s, %s, %s, %s, %s);",
-            (id, product_name, product_description, product_price, product_category, product_quantity)
+    db_query("INSERT INTO products (product_id, product_name, product_description, price, category, stock, available) VALUES (?, ?, ?, ?, ?, ?, ?);",
+            (id, product_name, product_description, product_price, product_category, product_quantity, True)
     )
 
     # Create a folder for the user
@@ -101,27 +109,21 @@ def create_product(product_name, product_description, product_price, product_cat
 
 
 def remove_product(id):
+
+    # Secure Query to delete the product from the carts
+    query = "DELETE FROM carts WHERE product_id = ?;"
+    db_query(query, (id))
+
     # Secure Query
-    query = "DELETE FROM products WHERE id = %s"
-    db_query(query, (id,))
-
-
-    # Get the current working directory
-    directory = os.getcwd()
-
-    # Define the path for the user's directory
-    user_directory = os.path.join(directory, "catalog")
-
-    # Create the user's directory and any missing parent directories
-    if os.path.exists(os.path.join(user_directory, f"{id}.png")):
-        os.remove(os.path.join(user_directory, f"{id}.png"))
+    query = "UPDATE products SET available = 0 WHERE product_id = ?;"
+    db_query(query, (id))
 
     return True
 
 
 def update_product_name(id, name):
     # Secure Query
-    query = "UPDATE products SET name = %s WHERE id = %s"
+    query = "UPDATE products SET product_name = ? WHERE product_id = ?;"
     db_query(query, (name, id))
 
     return True
@@ -129,7 +131,7 @@ def update_product_name(id, name):
 
 def update_product_description(id, description):
     # Secure Query
-    query = "UPDATE products SET description = %s WHERE id = %s"
+    query = "UPDATE products SET product_description = ? WHERE product_id = ?;"
     db_query(query, (description, id))
 
     return True
@@ -137,7 +139,7 @@ def update_product_description(id, description):
 
 def update_product_price(id, price):
     # Secure Query
-    query = "UPDATE products SET price = %s WHERE id = %s"
+    query = "UPDATE products SET price = ? WHERE product_id = ?"
     db_query(query, (price, id))
 
     return True
@@ -146,7 +148,7 @@ def update_product_price(id, price):
 def update_product_category(id, category):
     
     # Secure Query
-    query = "UPDATE products SET category = %s WHERE id = %s"
+    query = "UPDATE products SET category = ? WHERE product_id = ?"
     db_query(query, (category, id))
 
     return True
@@ -154,7 +156,7 @@ def update_product_category(id, category):
 
 def update_product_quantity(id, quantity):
     # Secure Query
-    query = "UPDATE products SET stock = %s WHERE id = %s"
+    query = "UPDATE products SET stock = ? WHERE product_id = ?"
     db_query(query, (quantity, id))
 
     return True
@@ -164,38 +166,35 @@ def create_review(id, user_id, review, rating):
     review_id = str(generate_random_product_id("reviews"))
 
     # Secure Query
-    query = "INSERT INTO reviews (id, product_id, user_id, rating, review) VALUES (%s, %s, %s, %s, %s);"
-    db_query(query, (review_id, id, user_id, rating, review))
+    query = "INSERT INTO reviews (review_id, product_id, user_id, review_text, rating, review_date) VALUES (?, ?, ?, ?, ?, ?);"
+    db_query(query, (review_id, id, user_id, review, rating, datetime.now()))
 
     return True
 
 
-def set_cart_item(table_name, product_id, quantity, operation):
-    # Secure Query: Validate the table name
-    if not is_valid_table_name(table_name):
-        return False  # Return an error or handle it appropriately
+def set_cart_item(id, product_id, quantity, operation):
 
     # Secure Query: Check if the product is already in the cart
-    query = "SELECT * FROM {} WHERE product_id = %s".format(table_name)
-    results = db_query(query, (product_id,))
+    query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
+    results = db_query(query, (product_id, id))
 
     if len(results) != 0:
         # Update the quantity
         if operation == "add":
             # Secure Query: Update the quantity
-            update_query = "UPDATE {} SET quantity = quantity + %s WHERE product_id = %s".format(table_name)
+            update_query = "UPDATE carts SET quantity = quantity + ? WHERE product_id = ? AND user_id = ?"
         else:
             # Secure Query: Update the quantity
-            update_query = "UPDATE {} SET quantity = quantity - %s WHERE product_id = %s".format(table_name)
+            update_query = "UPDATE carts SET quantity = quantity - ? WHERE product_id = ? AND user_id = ?"
 
         # Secure Query: Execute the update
-        db_query(update_query, (quantity, product_id))
+        db_query(update_query, (quantity, product_id, id))
         return True
     else:
         # Add the product to the cart
         # Secure Query: Insert into the cart
-        insert_query = "INSERT INTO {} (product_id, quantity) VALUES (%s, %s)".format(table_name)
-        db_query(insert_query, (product_id, quantity))
+        insert_query = "INSERT INTO carts (product_id, quantity, user_id) VALUES (?, ?, ?)"
+        db_query(insert_query, (product_id, quantity, id))
         return True
 
 
@@ -208,22 +207,14 @@ def register_order(username, user_id, order_details, products):
             total_price += float(product["price"]) * product["quantity"]
             products_to_register[product["product_id"]] = product["quantity"]
 
-        order_id = str(generate_random_product_id("all_orders"))
-        time = datetime.now().strftime("%d-%m-%Y %H:%M")
+        order_id = str(generate_random_product_id("orders"))
+        time = datetime.now()
         
         # Register in all orders
         # Secure Query
-        all_orders_query = "INSERT INTO all_orders (id, user_id, order_date) VALUES (%s, %s, %s);"
-        db_query(all_orders_query, (order_id, user_id, time))
-
-        # Register in user-specific orders table
-        # Secure Query: Validate the table name
-        user_orders_table = f"{username}_orders"
-        if not is_valid_table_name(user_orders_table):
-            return False, None
-
-        user_orders_query = "INSERT INTO {} (id, products, total_price, shipping_address, order_date) VALUES (%s, %s, %s, %s, %s);".format(user_orders_table)
-        db_query(user_orders_query, (order_id, json.dumps(products_to_register), total_price, order_details["shipping_address"], time))
+        for product in products:
+            query = "INSERT INTO orders (order_id, user_id, product_id, quantity, total_price, shipping_address, order_date) VALUES (?, ?, ?, ?, ?, ?, ?);"
+            db_query(query, (order_id, user_id, product["product_id"], product["quantity"], total_price, order_details["shipping_address"], time))
 
         return True, order_id
     except:

@@ -2,18 +2,18 @@ import os, tempfile
 from handlers.extensions import bcrypt
 from handlers.UserManagement import search_user_by_email, get_id_by_username, send_password_reset_email
 from flask import Blueprint, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
-from handlers.UserManagement import search_user_by_username, create_user, get_orders_by_user_id, generate_random_id_totp_temp, check_password, generate_excel_user_data
+from handlers.UserManagement import search_user_by_username, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
 from handlers.UserManagement import update_username, search_user_by_id, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
 from handlers.UserManagement import get_user_role, compose_email_body, update_password, generate_reset_token, set_reset_token_for_user
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
 from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
-from handlers.ProductManagement import update_product_description, update_product_price, update_product_category, update_product_quantity
+from handlers.ProductManagement import update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import check_database_table_exists, db_query, is_valid_table_name
+from handlers.DataBaseCoordinator import check_database_tables_exist, db_query, is_valid_table_name
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
-from handlers.TOTPHandler import generate_totp_atributes, verify_totp_code, store_totp_stage, get_totp_atributes, generate_emergency_codes
+from handlers.TOTPHandler import generate_totp_atributes, verify_totp_code, generate_emergency_codes
 
 
 
@@ -22,12 +22,7 @@ views = Blueprint('views', __name__)
 
 
 # Check if the database tables exist
-check_database_table_exists("users")
-check_database_table_exists("products")
-check_database_table_exists("reviews")
-check_database_table_exists("all_orders")
-check_database_table_exists("totp_temp")
-check_database_table_exists("emergency_codes")
+check_database_tables_exist()
 
 
 # This route is used to serve the index page
@@ -97,50 +92,52 @@ def signup():
         return render_template("signup.html")
 
 
+# This view validates the consent after signup view redirects to the information_collected.html
 @views.route('/validate_consent', methods=['POST'])
 def validate_consent():
     consent = request.form.get('consent')
     if consent:
-        temp_id = str(generate_random_id_totp_temp())
 
         username = session.get("signup_username")
-        email = session.get("signup_email")
-        hashed_password = session.get("signup_hashed_password")
 
         secret_key, secret_key_timestamp, qr_code_base64 = generate_totp_atributes(username)
 
-        store_totp_stage(temp_id, username, secret_key, secret_key_timestamp, email, hashed_password)
+        # Store the secret_key and the secret_key_timestamp in the session
+        session["secret_key"] = secret_key
+        session["secret_key_timestamp"] = secret_key_timestamp
 
-        # Clean the session variables
-        session.pop("signup_username", None)
-        session.pop("signup_email", None)
-        session.pop("signup_hashed_password", None)
-
-        return render_template('totp_signup.html', secret_key=secret_key, qr_code=qr_code_base64, id=temp_id)
+        return render_template('totp_signup.html', secret_key=secret_key, qr_code=qr_code_base64)
     else:
         return redirect(url_for("views.signup"))
 
 
-@views.route('verify_totp_signup/<id>', methods=['POST'])
-def verify_totp_signup(id):
+@views.route('verify_totp_signup/', methods=['POST'])
+def verify_totp_signup():
 
-    token = request.form.get("token")
+    inserted_totp = request.form.get("token")
 
-    if token == None:
+    if inserted_totp == None:
         return render_template("signup.html", message="Invalid TOTP code. Please try again.")
 
-    # Verify the TOTP code
-    if verify_totp_code(id, token, 'totp_temp'):
+    secret_key = session.get("secret_key")
 
-        # Get all the atributes from the temporary table
-        username, email, hashed_password, secret_key, secret_key_timestamp = get_totp_atributes(id)
+    # Verify the TOTP code
+    if verify_totp_code(inserted_totp, secret_key):
+
+        username = session.get("signup_username")
+        email = session.get("signup_email")
+        hashed_password = session.get("signup_hashed_password")
+        secret_key_timestamp = session.get("secret_key_timestamp")
 
         # Create the user in the database with the hashed password
         id, ans = create_user(username, hashed_password, email, secret_key, secret_key_timestamp)
 
-        # Clear the temporary table
-        query = "DELETE FROM totp_temp WHERE id = %s"
-        db_query(query, (id,))
+        # Clear the session variables
+        session.pop("signup_hashed_password", None)
+        session.pop("signup_username", None)
+        session.pop("signup_email", None)
+        session.pop("secret_key", None)
+        session.pop("secret_key_timestamp", None)
 
         if ans == False:
             return render_template("signup.html", message="Error! Please try again.")
@@ -217,12 +214,16 @@ def verify_totp_login(id):
         return render_template("totp_login.html", id=id)
     else:
         username = search_user_by_id(id)[1]
+
         token = request.get_json().get("token") if request.is_json else None
-        
+
         if username is None or token is None:
             return render_template("login.html", message="Invalid TOTP code. Please try again.")
-        
-        verified = verify_totp_code(id, token, 'users', username=username)
+
+        secret_key = get_totp_secret(id)
+
+        verified = verify_totp_code(token, secret_key)
+
 
         # Verify the TOTP code
         if verified == True:
@@ -230,11 +231,6 @@ def verify_totp_login(id):
             session["username"] = username
             session["id"] = id
             session["admin"] = get_user_role(session["id"])
-
-            # Check for table existence
-            check_database_table_exists(username.lower() + "_cart")
-            check_database_table_exists(f"{username.lower()}_orders")
-
             return jsonify({'message': 'Login successful.'}), 200
         else:
 
@@ -512,7 +508,7 @@ def remove_product_by_id(id):
     # Updated route name and parameter name to avoid conflicts
     product_id = request.form.get("productId")
 
-    if is_valid_input(product_id) != False and id is not None and verify_id_exists(product_id, "products"):
+    if is_valid_input(product_id) != False and id is not None and verify_id_exists(product_id, "products") and check_product_availability(product_id) == True:
         # Assuming 'remove_product' is a function you've defined elsewhere, you can use it here
         remove_product(product_id)
 
@@ -567,12 +563,14 @@ def product_page(product_id):
     # Fetch the product details based on the product_id
     # You can retrieve the product information from your data source
     id = session.get("id")
+    
+    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
+        return redirect(url_for("views.catalog", id=id))
+    
     product = get_product_by_id(product_id)
     admin = get_user_role(id)
 
-    if verify_id_exists(product_id, "products") == False:
-        return redirect(url_for("views.catalog", id=id))
-    elif id == None:
+    if id == None:
         # Pass the product details to the template
         return render_template('product_anonymous.html', product = product)
     elif admin:
@@ -584,6 +582,9 @@ def product_page(product_id):
 
 @views.route('/get_reviews/<int:product_id>/', methods=['GET'])
 def get_reviews(product_id):
+
+    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
+        return jsonify([])
 
     reviews = get_product_reviews(product_id)
 
@@ -598,6 +599,9 @@ def get_reviews(product_id):
 
 @views.route('/add_review/<product_id>/', methods=['POST'])
 def add_review(product_id):
+
+    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
+        return redirect(url_for("views.catalog", id=session.get("id")))
 
     # Get the user's id and username from the session
     user_id = session.get("id")
@@ -628,10 +632,9 @@ def add_item_to_cart(product_id):
     id = session.get("id")
     if id == None:
         return redirect(url_for("views.login"))
-    elif verify_id_exists(product_id, "products") == False:
+    elif verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
         return redirect(url_for("views.catalog", id=id))
     
-    username = search_user_by_id(id)[1].lower()
     try:
         data = request.get_json()
         quantity = data.get('quantity')
@@ -639,27 +642,22 @@ def add_item_to_cart(product_id):
         if quantity <= 0:
             return jsonify({'error': 'Invalid quantity.'}), 500
         
-        if not is_valid_table_name(username + "_cart"):
-            return jsonify({'error': 'Invalid table name.'}), 400
-        
         # Secure Query
-        query = "SELECT * FROM {} WHERE product_id = %s".format(username + "_cart")
-        result = db_query(query, (product_id,))
-
+        query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
+        result = db_query(query, (product_id, id))
         product_stock = get_product_by_id(product_id)["stock"]
 
-        if result != [] and result[0][1] + quantity > product_stock:
+        if result != [] and result[0][2] + quantity > product_stock:
             return jsonify({'error': 'Not enough stock.'}), 500
         elif result == [] and (quantity > product_stock):
             return jsonify({'error': 'Not enough stock.'}), 500
         else:
-            set_cart_item(username + "_cart", product_id, quantity, "add")
+            set_cart_item(id, product_id, quantity, "add")
             return jsonify({'message': 'Product added to the cart.'}), 200
-        
+    
     except Exception as e:
         print(e)
         return jsonify({'error': str(e)}), 500
-    
 
 
 @views.route('/remove_item_cart/<int:product_id>', methods=['POST'])
@@ -670,36 +668,29 @@ def remove_item_from_cart(product_id):
     if id == None:
         return redirect(url_for("views.login"))
     
-    elif verify_id_exists(product_id, "products") == False:
+    elif verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
         return redirect(url_for("views.catalog", id=id))
 
-    username = search_user_by_id(id)[1].lower()
     try:
         data = request.get_json()
         quantity = data.get('quantity')
 
-        # Secure Query: Validate the table name
-        cart_table_name = f"{username}_cart"
-
-        if not is_valid_table_name(cart_table_name):
-            return jsonify({'error': 'Invalid table name.'}), 400
-
-        if check_product_in_cart(cart_table_name, product_id) == False or quantity <= 0:
+        if check_product_in_cart(id, product_id) == False or quantity <= 0:
             return jsonify({'error': 'Product not in cart.'}), 500
         else:
             # Secure Query
-            query = "SELECT * FROM {} WHERE product_id = %s".format(cart_table_name)
-            result = db_query(query, (product_id,))
+            query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
+            result = db_query(query, (product_id, id))
 
-            if result != [] and result[0][1] == quantity:
+            if result != [] and result[0][2] == quantity:
                 # Remove the product from the cart
                 # Secure Query
-                query = "DELETE FROM {} WHERE product_id = %s".format(cart_table_name)
-                db_query(query, (product_id,))
+                query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?"
+                db_query(query, (product_id, id))
                 return jsonify({'message': 'Product removed from the cart.'}), 200
-            elif result != [] and result[0][1] - quantity >= 0:
+            elif result != [] and result[0][2] - quantity >= 0:
                 # Secure Query: Update the user's cart in the database
-                set_cart_item(cart_table_name, product_id, quantity, "remove")
+                set_cart_item(id, product_id, quantity, "remove")
                 return jsonify({'message': 'Product removed from the cart.'}), 200
             else:
                 return jsonify({'message': 'Product not in the cart.'}), 500
@@ -714,7 +705,7 @@ def get_cart_items():
     if id == None:
         return redirect(url_for("views.login"))
     
-    user_cart = get_cart(search_user_by_id(id)[1].lower() + "_cart")
+    user_cart = get_cart(id)
 
     return jsonify(user_cart)
 
@@ -727,18 +718,12 @@ def remove_all_items_cart():
     if id == None:
         return redirect(url_for("views.login"))
 
-    username = search_user_by_id(id)[1].lower()
-
     # Remove all the products from the cart
-    # Secure Query: Validate the table name
-    table_name = username + "_cart"
-    if not is_valid_table_name(table_name):
-        return jsonify({'error': 'Invalid table name.'}), 400
 
     # Remove all the products from the cart
     # Secure Query
-    query = "DELETE FROM {}".format(table_name)
-    db_query(query)
+    query = "DELETE FROM carts WHERE user_id = ?"
+    db_query(query, (id))
 
     return jsonify({'message': 'Cart cleared.'}), 200
 
@@ -756,7 +741,7 @@ def checkout():
         # Get form data from the request
         data = request.get_json()
         # get the products from the cart
-        products = get_cart(username + "_cart")
+        products = get_cart(user_id)
 
         for element in products:
             element["price"] = float(element["price"])
@@ -783,7 +768,7 @@ def checkout():
             # Create a temporary directory to store the PDF
             with tempfile.TemporaryDirectory() as temp_dir:
                 pdf_path = os.path.join(temp_dir, f'order_{order_id}.pdf')
-                sql_to_pdf(username, pdf_path)
+                sql_to_pdf(user_id, pdf_path)
                 
                 # Send the order confirmation email with the PDF attachment
                 send_email_with_attachment(to, 'Order Confirmation', body, pdf_path)
@@ -794,8 +779,8 @@ def checkout():
             if not is_valid_table_name(cart_table_name):
                 return jsonify({'error': 'Invalid table name.'}), 400
 
-            query = "DELETE FROM {}".format(cart_table_name)
-            db_query(query, ())
+            query = "DELETE FROM carts WHERE user_id = ?"
+            db_query(query, (user_id))
 
 
             # Redirect to a thank you page or any other appropriate page
@@ -851,7 +836,6 @@ def get_user_data(id):
 @views.route('/verify-password', methods=['POST'])
 def verify_password():
     data = request.get_json()
-    print(data)
     password = data.get('password')
 
     if not password:

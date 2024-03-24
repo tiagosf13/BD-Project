@@ -11,36 +11,35 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
 from handlers.Retrievers import get_product_by_id
 from handlers.DataBaseCoordinator import db_query, read_json
-from handlers.Verifiers import is_valid_table_name
 
-def get_id_by_username(username):
-    # Construct the SQL query
+def get_username_by_id(id):
+    # Construct the SQL query to retrieve the username
     # Secure Query
-    query = "SELECT id FROM users WHERE username = %s"
-    result = db_query(query, (username,))
-    
+    query = "SELECT username FROM users WHERE user_id = ?;"
+    result = db_query(query, (id))
 
-    # Check if 
+    # Check if the username was found
     if result:
-        return str(result[0][0])
+
+        # If it was, return the username
+        return result[0][0]
+
     else:
+
+        # If it wasn't return None
         return None
 
-def sql_to_pdf(username, output_path):
-    # Secure Query: Validate the table name
-    cart_table_name = f"{username}_cart"
-    if not is_valid_table_name(cart_table_name):
-        return None  # Return an error or handle it appropriately
 
-    # Secure Query: Retrieve cart items
-    query = f"SELECT * FROM {cart_table_name}"
-    result = db_query(query)
+def sql_to_pdf(user_id, output_path):
 
-    id = get_id_by_username(username.capitalize())
+    query = "SELECT * FROM carts WHERE user_id = ?"
+    result = db_query(query, (user_id))
+
+    username = get_username_by_id(user_id)
     lst = []
     for element in result:
-        product_id = element[0]
-        quantity = element[1]
+        product_id = element[1]
+        quantity = element[2]
         product = get_product_by_id(product_id)
         product_name = product["name"]
         price = product["price"]
