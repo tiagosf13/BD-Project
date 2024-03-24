@@ -1,5 +1,5 @@
 import re
-from handlers.DataBaseCoordinator import db_query, is_valid_table_name
+from handlers.DataBaseCoordinator import db_query
 
 
 def check_username_exists(username):

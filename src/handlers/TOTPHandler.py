@@ -1,4 +1,4 @@
-import pyotp, qrcode, io, base64, json
+import pyotp, qrcode, io, base64
 from datetime import datetime
 from handlers.DataBaseCoordinator import db_query
 from handlers.UserManagement import generate_emergency_code

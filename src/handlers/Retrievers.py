@@ -1,5 +1,4 @@
 from handlers.DataBaseCoordinator import db_query
-from handlers.Verifiers import is_valid_table_name
 
 def get_orders(username_orders):
 
@@ -83,7 +82,7 @@ def get_product_reviews(product_id):
         return None
 
     # Secure Query
-    query = "SELECT * FROM reviews WHERE product_id = ?"
+    query = "SELECT * FROM reviews WHERE product_id = ?;"
     results = db_query(query, (product_id))
 
     reviews = []

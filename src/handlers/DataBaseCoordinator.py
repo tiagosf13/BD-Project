@@ -1,5 +1,4 @@
-import os, json, psycopg2, re
-import pyodbc
+import os, json, re, pyodbc
 
 
 def read_json(filename):
@@ -19,7 +18,7 @@ def read_json(filename):
     return data
 
 
-def read_sql_file(filename, split_rule = ";"):
+def read_sql_file(filename):
     
         if os.name == "nt":
             # Get the current working directory
@@ -33,20 +32,6 @@ def read_sql_file(filename, split_rule = ";"):
         with open(full_file_path, "r", encoding="utf8") as file:
             sql_query = file.read()
         return sql_query
-
-
-def is_valid_table_name(table_name):
-    # Define a regular expression pattern to match valid table names
-    valid_table_name_pattern = re.compile(r'^[a-zA-Z0-9_]+$')
-
-    # Maximum table name length (adjust as needed)
-    max_table_name_length = 50
-
-    # Check if the table name matches the valid pattern and is not too long
-    if len(table_name) <= max_table_name_length and valid_table_name_pattern.match(table_name):
-        return True
-    else:
-        return False
 
 
 def db_query(query, params=None):

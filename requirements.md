@@ -8,7 +8,7 @@ random
 shutil
 pandas
 smtplib
-psycopg2
+pyodbc
 tempfile
 datetime
 reportlab

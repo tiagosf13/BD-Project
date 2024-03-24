@@ -1,4 +1,4 @@
-import random, os, json
+import random, os
 from datetime import datetime
 from handlers.Retrievers import get_product_by_id
 from handlers.DataBaseCoordinator import db_query
