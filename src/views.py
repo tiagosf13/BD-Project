@@ -9,7 +9,7 @@ from handlers.ProductManagement import create_review, set_cart_item, update_prod
 from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
 from handlers.ProductManagement import update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import check_database_tables_exist, db_query, is_valid_table_name
+from handlers.DataBaseCoordinator import check_database_tables_exist, db_query
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
@@ -758,7 +758,7 @@ def checkout():
         }
 
         # Add the order to the database
-        response, order_id = register_order(username, user_id, order_details, products)
+        response, order_id = register_order(user_id, order_details, products)
 
         if response:
             update_product_after_order(products)
@@ -772,12 +772,6 @@ def checkout():
                 
                 # Send the order confirmation email with the PDF attachment
                 send_email_with_attachment(to, 'Order Confirmation', body, pdf_path)
-
-            # Clear the cart
-            # Secure Query: Validate the table name
-            cart_table_name = f"{username}_cart"
-            if not is_valid_table_name(cart_table_name):
-                return jsonify({'error': 'Invalid table name.'}), 400
 
             query = "DELETE FROM carts WHERE user_id = ?"
             db_query(query, (user_id))

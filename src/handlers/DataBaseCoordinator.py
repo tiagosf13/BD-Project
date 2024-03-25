@@ -1,37 +1,19 @@
-import os, json, pyodbc
+import json, pyodbc
+from handlers.Retrievers import get_current_dir
 
 
 def read_json(filename):
 
-
-    if os.name == "nt":
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-    else:
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
-
-    full_file_path = current_directory + filename
-
-    with open(full_file_path, "r", encoding="utf8") as file:
+    with open(get_current_dir() + filename, "r", encoding="utf8") as file:
         data = json.load(file)
     return data
 
 
 def read_sql_file(filename):
     
-        if os.name == "nt":
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-        else:
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
-    
-        full_file_path = current_directory + filename
-    
-        with open(full_file_path, "r", encoding="utf8") as file:
-            sql_query = file.read()
-        return sql_query
+    with open(get_current_dir() + filename, "r", encoding="utf8") as file:
+        sql_query = file.read()
+    return sql_query
 
 
 def db_query(query, params=None):

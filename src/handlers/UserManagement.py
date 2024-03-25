@@ -5,6 +5,7 @@ from handlers.EmailHandler import send_email
 from handlers.DataBaseCoordinator import db_query
 from handlers.ProductManagement import get_product_by_id
 from handlers.Verifiers import is_valid_input
+from handlers.Retrievers import get_current_dir
 from datetime import datetime, timedelta  # For working with token expiration
 
 
@@ -44,7 +45,7 @@ def is_valid_reset_token(reset_token):
 
 # Generate a unique reset token
 def generate_reset_token(code_length=32):
-    return ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(code_length))
+    return ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(code_length))
 
 def generate_emergency_code(code_length=6):
     return ''.join(secrets.choice(string.digits) for i in range(code_length))
@@ -71,15 +72,7 @@ def send_password_reset_email(email, reset_token):
     # The link should point to a password reset route in your application where users can reset their passwords.
     # Make sure the token is securely validated in the reset route.
 
-    # Read the HTML and CSS files
-    if os.name == "nt":
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-    else:
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
-
-    with open(current_directory + '/templates/email_password_reset.html', 'r', encoding='utf8') as html_file:
+    with open(get_current_dir() + '/templates/email_password_reset.html', 'r', encoding='utf8') as html_file:
         email_template = html_file.read()
 
     # Render the email template with the context (including the reset_token)
@@ -97,13 +90,7 @@ def search_user_by_username(username):
     query = "SELECT * FROM users WHERE username = ?"
     result = db_query(query, (username))
 
-
-    # If no user is found, return None
-    if not result:
-        return None
-
-    # Return the user data
-    return result[0]
+    return result[0] if result else None
 
 
 def search_user_by_email(email):
@@ -112,14 +99,7 @@ def search_user_by_email(email):
     query = "SELECT * FROM users WHERE email = ?"
     result = db_query(query, (email))
 
-
-    # If no user is found, return None
-    if not result:
-
-        return None
-
-    # Return the user data
-    return result[0][1]
+    return result[0][1] if result else None
 
 
 def validate_login(username, password):
@@ -134,48 +114,26 @@ def validate_login(username, password):
         query = "SELECT password FROM users WHERE username = ?"
         result = db_query(query, (username))
 
-
-        # Check if there is a password
-        if not result:
-            return None
-        
-        # Check if the provided password matches the user's password
-        if result[0][0] == password:
-
-            # Return True to indicate the login has been validated
-            return True
-
-        else:
-            # Return False to indicate the login credentials aren't valid
-            return False
-        
+        return result[0][0] == password if result else None
 
 def get_id_by_username(username):
     # Construct the SQL query
     # Secure Query
     query = "SELECT user_id FROM users WHERE username = ?"
     result = db_query(query, (username))
-
-
-    # Check if 
-    if result:
-        return str(result[0][0])
-    else:
-        return None
     
+    return str(result[0][0]) if result else None
 
 def generate_password(length):
 
     code = ''
-
     # Generate a random password
-    for i in range(length):
+    for _ in range(length):
         code += random.choice(ascii_uppercase + ascii_lowercase + '0123456789')
 
     return code
 
 def send_recovery_password(email):
-
 
     # Search for the user with the given email
     user = search_user_by_email(email)
@@ -183,7 +141,6 @@ def send_recovery_password(email):
 
     # If user is None, return False (user not found)
     if user is None:
-
         return False
     else:
 
@@ -255,12 +212,7 @@ def generate_random_id():
 def create_user_folder(id):
     try:
         # Get the current working directory
-        if os.name == "nt":
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-        else:
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+        current_directory = get_current_dir()
 
         # Define the path for the user's directory
         user_directory = os.path.join(current_directory, "database", "accounts")
@@ -309,34 +261,6 @@ def change_password(id, password):
 
 def update_username(id, new_username):
 
-    # Get the old username based on the ID
-    old_username = search_user_by_id(id)[1]
-    
-    # Construct the SQL query
-    # Secure Query
-    query = "IF EXISTS(SELECT * FROM information_schema.tables WHERE table_name=?) SELECT 1 ELSE SELECT 0;"
-    result = db_query(query, (old_username+"_cart"))
-
-
-    if result[0][0]:
-
-        # Build the query to alterate the statement username's table
-        # Secure Query
-        query = "ALTER TABLE "+old_username.lower()+"_cart"+" RENAME TO "+new_username.lower()+"_cart"+";"
-        db_query(query)
-
-
-    query = "IF EXISTS(SELECT * FROM information_schema.tables WHERE table_name=?) SELECT 1 ELSE SELECT 0;"
-    result = db_query(query, (old_username+"_orders"))
-    
-    if result[0][0]:
-
-        # Build the query to alterate the statement username's table
-        # Secure Query
-        query = "ALTER TABLE "+old_username.lower()+"_orders"+" RENAME TO "+new_username.lower()+"_orders"+";"
-        db_query(query)
-
-
     # Build the query to update the username in the user's table
     # Secure Query
     query = "UPDATE users SET username = ? WHERE user_id = ?"
@@ -350,13 +274,7 @@ def search_user_by_id(id):
     query = "SELECT * FROM users WHERE user_id = ?"
     result = db_query(query, (id))
 
-
-    # If no user is found, return None
-    if not result:
-        return None
-
-    # Return the user data
-    return result[0]
+    return result[0] if result else None
 
 
 def update_email(id, email):
@@ -385,16 +303,7 @@ def get_username_by_id(id):
     query = "SELECT username FROM users WHERE user_id = ?;"
     result = db_query(query, (id))
 
-    # Check if the username was found
-    if result:
-
-        # If it was, return the username
-        return result[0][0]
-
-    else:
-
-        # If it wasn't return None
-        return None
+    return result[0][0] if result else None
 
 def get_user_role(id):
 
@@ -410,13 +319,8 @@ def get_user_role(id):
     return result[0][0] if result else None
 
 def compose_email_body(products, order_id):
-    # Read the HTML and CSS files
-    if os.name == "nt":
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-    else:
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+    
+    current_directory = get_current_dir()
 
     with open(current_directory + '/templates/email_order.html', 'r', encoding='utf8') as html_file:
         email_template = html_file.read()
@@ -445,7 +349,6 @@ def calculate_total_price(products):
 
 
 def get_orders_by_user_id(id):
-
 
     query = "SELECT * FROM orders WHERE user_id = ?;"
     results = db_query(query, (id))
@@ -551,13 +454,7 @@ def generate_excel_user_data(id):
     df_reviews = pd.DataFrame(data.get('reviews', []))
     df_orders = pd.DataFrame(data.get('orders', []))
 
-    # Read the HTML and CSS files
-    if os.name == "nt":
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-    else:
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+    current_directory = get_current_dir()
 
     # Check if the directory exists
     user_data_directory = os.path.join(current_directory, "database", "user_data")

@@ -1,4 +1,18 @@
+import os
 from handlers.DataBaseCoordinator import db_query
+
+
+def get_current_dir():
+
+    if os.name == "nt":
+        # Get the current working directory
+        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
+    else:
+        # Get the current working directory
+        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+
+    return current_directory
+
 
 def get_orders(username_orders):
 

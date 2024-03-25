@@ -12,7 +12,7 @@ def generate_emergency_codes(id, n_codes=10, code_length=6, reset=False):
     # Generate n_codes emergency codes, each with code_length characters (Upper case letters, Lower case letters, Special characters and numbers)
     emergency_codes = {}
 
-    for i in range(n_codes):
+    for _ in range(n_codes):
         
         # Generate a random code with code_length numbers
         emergency_codes[generate_emergency_code()] = True
@@ -72,7 +72,7 @@ def generate_totp_atributes(username, qr_code=True):
         qr_code_base64 = generate_qr_code(secret_key, username)
     else:
         qr_code_base64 = None
-    
+
     return secret_key, secret_key_timestamp, qr_code_base64
 
 def generate_qr_code(secret_key, username):
@@ -83,8 +83,8 @@ def generate_qr_code(secret_key, username):
     # Convert QR code image to base64
     qr_code = io.BytesIO()
     qr.save(qr_code, format='PNG')
-    qr_code_base64 = base64.b64encode(qr_code.getvalue()).decode('utf-8').strip()
-    return qr_code_base64
+
+    return base64.b64encode(qr_code.getvalue()).decode('utf-8').strip()
 
 def update_totp(id, secret_key, secret_key_timestamp):
     # Store the secret key securely for each user, maybe in a database
@@ -98,12 +98,7 @@ def verify_totp_code(token, secret_key=None):
     # Verify the TOTP code
     totp = pyotp.TOTP(secret_key)
     is_verified = totp.verify(token)
-    if is_verified:
-        return True
-    else:
-        return False
-
-
+    return is_verified
 
 
 def get_totp_secret(id):
@@ -111,8 +106,4 @@ def get_totp_secret(id):
     query = "SELECT totp_secret_key FROM users WHERE user_id = ?"
     result = db_query(query, (id))
 
-    if result:
-        secret_key = result[0][0]
-        return secret_key
-    
-    return None
+    return result[0][0] if result else None

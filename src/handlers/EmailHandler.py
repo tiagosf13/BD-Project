@@ -13,6 +13,7 @@ from handlers.Retrievers import get_product_by_id
 from handlers.DataBaseCoordinator import db_query, read_json
 
 def get_username_by_id(id):
+    
     # Construct the SQL query to retrieve the username
     # Secure Query
     query = "SELECT username FROM users WHERE user_id = ?;"

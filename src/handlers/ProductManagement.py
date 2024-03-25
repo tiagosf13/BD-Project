@@ -1,8 +1,7 @@
 import random, os
 from datetime import datetime
-from handlers.Retrievers import get_product_by_id
+from handlers.Retrievers import get_product_by_id, get_current_dir
 from handlers.DataBaseCoordinator import db_query
-from handlers.Verifiers import is_valid_table_name
 
 
 def verify_product_exists(product_name):
@@ -44,6 +43,7 @@ def verify_id_exists(id, table):
     
 
 def generate_random_product_id(table):
+
     # Generate a random ID
     random_id = random.randint(100000, 999999)
 
@@ -55,17 +55,10 @@ def generate_random_product_id(table):
 
 
 def create_product_image(id, product_photo):
-    try:
-        # Get the current working directory
-        if os.name == "nt":
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-        else:
-            # Get the current working directory
-            current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
 
+    try:
         # Define the path for the product image directory
-        product_image_directory = os.path.join(current_directory, "catalog")
+        product_image_directory = os.path.join(get_current_dir(), "catalog")
 
         # Create the product image directory and any missing parent directories
         os.makedirs(product_image_directory, exist_ok=True)
@@ -75,13 +68,10 @@ def create_product_image(id, product_photo):
 
         # Check if the product image file already exists and remove it
         if os.path.exists(product_image_path):
-            print("Removing existing product image file...")
-            print(product_image_path)
             os.remove(product_image_path)
 
         # Save the product photo to the specified path
         product_photo.save(product_image_path)
-
     except Exception as e:
         print(e)  # Handle or log any exceptions that occur during this process
 
@@ -199,7 +189,7 @@ def set_cart_item(id, product_id, quantity, operation):
 
 
 
-def register_order(username, user_id, order_details, products):
+def register_order(user_id, order_details, products):
     try:
         products_to_register = {}
         total_price = 0
