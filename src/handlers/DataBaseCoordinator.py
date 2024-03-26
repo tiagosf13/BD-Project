@@ -1,5 +1,16 @@
 import json, pyodbc
-from handlers.Retrievers import get_current_dir
+import os
+
+def get_current_dir():
+
+    if os.name == "nt":
+        # Get the current working directory
+        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
+    else:
+        # Get the current working directory
+        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+
+    return current_directory
 
 
 def read_json(filename):

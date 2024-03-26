@@ -1,6 +1,14 @@
-# First Delivery
+# BD: Trabalho Prático Loja (?)
+
+**Grupo**: P2G3
+- Tiago Fonseca, MEC: 107266
+- João Gaspar, MEC: 114514
+
+
+## Introduction
 
 [Explicar a app]
+
 
 ## Features
 
@@ -9,13 +17,34 @@
 - Make your opinion count and add a rating or comment to the products you buy or wish to buy
 - Stay on top of your orders by simply checking your orders page, you can rebuy from any past order you have
 
-[Fazer o resto das funcionalidades]
 
-## Requisitos
+## Requirements
 
-[Apresentar os requisitos funcionais e não funcionais]
+### Functional
 
-## Entidades
+* #### Users
+    * Create an account with a persistent cart
+    * Add and remove products to cart
+    * Complete orders
+    * Edit account information
+    * See previous orders
+    * Review bought products
+    * Filter and search for products
+
+* #### Administrators
+    * Add and remove products to the shop
+    * Edit products data
+    * See current selling products on shop
+    * Process and/or delete orders
+    * See shop statistics
+
+
+### Non Functional
+
+* 
+
+
+## Entities
 
 * carts
 * emergency_codes
@@ -24,23 +53,25 @@
 * reviews
 * users
 
-## Relações
+
+##  Relations
 
 * users - orders [1:N]
-* users - emergency_codes [N:M]
+* users - emergency_codes [1:N]
 * users - carts [1:1]
 * users - reviews [1:N]
 * orders - products [N:M]
 * carts - products [N:M]
 * reviews - products [N:1]
 
-## Atributos das Entidades
+
+## Entity attributes
 
 #### carts
 
 * user_id **[PK] [FK]**
 * product_id **[PK] [FK]**
-* quantity **[FK]**
+* quantity **[PK]**
 
 #### emergency_codes
 
@@ -53,11 +84,15 @@
 
 * order_id **[PK]**
 * user_id **[PK] [FK]**
-* product_id **[PK] [FK]**
-* quantity
 * total_price
 * shipping_address
 * order_date
+
+#### products_Ordered
+
+* order_id **[PK] [FK]**
+* product_id **[PK] [FK]**
+* quantity
 
 #### products
 
@@ -92,8 +127,8 @@
 
 ## DER
 
-[Apresentar o DER]
+![DER](DER.png "")
 
 ## ER
 
-[Apresentar o ER]
+![ER](ER.png "")
