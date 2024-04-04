@@ -9,12 +9,12 @@
 
 Online merchandising shop that implements a database, interactable through the front-end.
 There will be one main entity, the `Users`:
-  * After a `User` creates an account, in order to protect the account in case the he looses access to the account or to the 2-step authentication, he can recover the account using one of the N associated `emergency_codes` that will verify that the `User` is indeed the owner of the account
-  * `Users` will have one `cart` that is `User` specific.
-  * Each `cart` contains N `products` and each `products` can be in `carts` from M different `Users`.
-  * After a `User` buys products from a cart, an `order` will be placed. Each `order` is associated to a `User` and N `products`
-  * `Users` will also be able to make N `reviews` on one `product`, each `review` will have only one writer.
 
+* After a `User` creates an account, in order to protect the account in case the he looses access to the account or to the 2-step authentication, he can recover the account using one of the N associated `emergency_codes` that will verify that the `User` is indeed the owner of the account
+* `Users` will have one `cart` that is `User` specific.
+* Each `cart` contains N `products` and each `products` can be in `carts` from M different `Users`.
+* After a `User` buys products from a cart, an `order` will be placed. Each `order` is associated to a `User` and N `products`
+* `Users` will also be able to make N `reviews` on one `product`, each `review` will have only one writer.
 
 ## Features
 
@@ -82,7 +82,7 @@ There will be one main entity, the `Users`:
 #### orders
 
 * order_id **[PK]**
-* user_id **[PK] [FK]**
+* user_id **[FK]**
 * total_price
 * shipping_address
 * order_date
