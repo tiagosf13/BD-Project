@@ -7,7 +7,7 @@
 
 ## Introduction
 
-Online merchandising shop that implements a database, interactable through the front-end. Users will be able to create accounts, add merchandising to their carts and buying the chosen merch by placing the order. While administrators will be able to add, remove and update the products sold in the app and even process the orders, they will also have utility tools to see diverse statistic, ultimately presenting shop success to the owner. 
+Online merchandising shop that implements a database, interactable through the front-end. Users will be able to create accounts, add merchandising to their carts and buying the chosen merch by placing the order. While administrators will be able to add, remove and update the products sold in the app and even process the orders, they will also have utility tools to see diverse statistic, ultimately presenting shop success to the owner.
 
 ## Features
 
@@ -40,13 +40,13 @@ Online merchandising shop that implements a database, interactable through the f
 ### Non Functional
 
 * Security
-  * to complete
+  * Provide 2FA and Emergency Codes for Users, securing the Authentication process and the respective accounts
 * Performance
-  * to complete
+  * The shop must be quick and have a short response time
 * Reliability
-  * to complete
+  * It must persist during and after issues, maintaining the integrity of critical information
 * Ease-of-Use
-  * to complete
+  * It should be intuitive and accessible for everyone to use
 
 ## Entities
 
@@ -56,16 +56,6 @@ Online merchandising shop that implements a database, interactable through the f
 * products
 * reviews
 * users
-
-## Relations
-
-* users - orders [1:N]
-* users - emergency_codes [1:N]
-* users - carts [1:1]
-* users - reviews [1:N]
-* orders - products [N:M]
-* carts - products [N:M]
-* reviews - products [N:1]
 
 ## Entity attributes
 
@@ -106,7 +96,7 @@ Online merchandising shop that implements a database, interactable through the f
 * stock
 * available
 
-#### reviews (NAO ESTA BEM NO ER)
+#### reviews
 
 * review_id **[PK]**
 * product_id **[FK]**
@@ -125,7 +115,7 @@ Online merchandising shop that implements a database, interactable through the f
 * email
 * totp_secret_key
 * totp_secret_key_timestamp
-* admin_role (FALTA NO ER)
+* admin_role
 
 ## DER
 
