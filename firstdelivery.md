@@ -7,7 +7,7 @@
 
 ## Introduction
 
-[Explicar a app]
+Online merchandising shop that implements a database, interactable through the front-end. Users will be able to create accounts, add merchandising to their carts and buying the chosen merch by placing the order. While administrators will be able to add, remove and update the products sold in the app and even process the orders, they will also have utility tools to see diverse statistic, ultimately presenting shop success to the owner. 
 
 ## Features
 
@@ -78,7 +78,7 @@
 #### emergency_codes
 
 * user_id **[PK] [FK]**
-* emergency_code **[PK] (NO ER NÃO ESTÁ COMO PK)**
+* emergency_code **[PK]**
 * emergency_code_valid
 * emergency_code_timestamp
 
