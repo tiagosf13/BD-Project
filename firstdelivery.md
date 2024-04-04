@@ -1,14 +1,13 @@
 # BD: Trabalho Prático Loja (?)
 
 **Grupo**: P2G3
+
 - Tiago Fonseca, MEC: 107266
 - João Gaspar, MEC: 114514
-
 
 ## Introduction
 
 [Explicar a app]
-
 
 ## Features
 
@@ -17,32 +16,37 @@
 - Make your opinion count and add a rating or comment to the products you buy or wish to buy
 - Stay on top of your orders by simply checking your orders page, you can rebuy from any past order you have
 
-
 ## Requirements
 
 ### Functional
 
 * #### Users
-    * Create an account with a persistent cart
-    * Add and remove products to cart
-    * Complete orders
-    * Edit account information
-    * See previous orders
-    * Review bought products
-    * Filter and search for products
 
+  * Create an account with a persistent cart
+  * Add and remove products to cart
+  * Complete orders
+  * Edit account information
+  * See previous orders
+  * Review bought products
+  * Filter and search for products
 * #### Administrators
-    * Add and remove products to the shop
-    * Edit products data
-    * See current selling products on shop
-    * Process and/or delete orders
-    * See shop statistics
 
+  * Add and remove products to the shop
+  * Edit products data
+  * See current selling products on shop
+  * Process and/or delete orders
+  * See shop statistics
 
 ### Non Functional
 
-* 
-
+* Security
+  * to complete
+* Performance
+  * to complete
+* Reliability
+  * to complete
+* Ease-of-Use
+  * to complete
 
 ## Entities
 
@@ -53,8 +57,7 @@
 * reviews
 * users
 
-
-##  Relations
+## Relations
 
 * users - orders [1:N]
 * users - emergency_codes [1:N]
@@ -64,19 +67,18 @@
 * carts - products [N:M]
 * reviews - products [N:1]
 
-
 ## Entity attributes
 
 #### carts
 
 * user_id **[PK] [FK]**
 * product_id **[PK] [FK]**
-* quantity **[PK]**
+* quantity
 
 #### emergency_codes
 
 * user_id **[PK] [FK]**
-* emergency_code **[PK]**
+* emergency_code **[PK] (NO ER NÃO ESTÁ COMO PK)**
 * emergency_code_valid
 * emergency_code_timestamp
 
@@ -88,7 +90,7 @@
 * shipping_address
 * order_date
 
-#### products_Ordered
+#### products_ordered
 
 * order_id **[PK] [FK]**
 * product_id **[PK] [FK]**
@@ -104,7 +106,7 @@
 * stock
 * available
 
-#### reviews
+#### reviews (NAO ESTA BEM NO ER)
 
 * review_id **[PK]**
 * product_id **[FK]**
@@ -123,12 +125,12 @@
 * email
 * totp_secret_key
 * totp_secret_key_timestamp
-* admin_role
+* admin_role (FALTA NO ER)
 
 ## DER
 
-![DER](DER.png "")
+![DER](DER.png)
 
 ## ER
 
-![ER](ER.png "")
+![ER](ER.png)
