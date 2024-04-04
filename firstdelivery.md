@@ -7,7 +7,14 @@
 
 ## Introduction
 
-Online merchandising shop that implements a database, interactable through the front-end. Users will be able to create accounts, add merchandising to their carts and buying the chosen merch by placing the order. While administrators will be able to add, remove and update the products sold in the app and even process the orders, they will also have utility tools to see diverse statistic, ultimately presenting shop success to the owner.
+Online merchandising shop that implements a database, interactable through the front-end.
+There will be one main entity, the `Users`:
+  * After a `User` creates an account, in order to protect the account in case the he looses access to the account or to the 2-step authentication, he can recover the account using one of the N associated `emergency_codes` that will verify that the `User` is indeed the owner of the account
+  * `Users` will have one `cart` that is `User` specific.
+  * Each `cart` contains N `products` and each `products` can be in `carts` from M different `Users`.
+  * After a `User` buys products from a cart, an `order` will be placed. Each `order` is associated to a `User` and N `products`
+  * `Users` will also be able to make N `reviews` on one `product`, each `review` will have only one writer.
+
 
 ## Features
 
