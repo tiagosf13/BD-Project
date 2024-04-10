@@ -1,5 +1,4 @@
-import json, pyodbc
-import os
+import json, pyodbc, os
 
 def get_current_dir():
 
@@ -92,17 +91,6 @@ def db_query(query, params=None):
 
 
 def check_database_tables_exist():
-    """
-                    ---------------> users <------ emergency_codes
-                    |                ^   ^
-                    |                |    \
-                    |                |     \
-                    |                carts  \
-                    |                |       \
-                    |                |        \
-                    |                v         \
-                    orders ----> products <--- reviews
-    """
     
     # Read the SQL files for creating the tables
     create_table_users = read_sql_file("/queries/create_users_table.sql")
@@ -111,6 +99,7 @@ def check_database_tables_exist():
     create_table_carts = read_sql_file("/queries/create_carts_table.sql")
     create_table_reviews = read_sql_file("/queries/create_reviews_table.sql")
     create_table_orders = read_sql_file("/queries/create_orders_table.sql")
+    create_table_products_ordered = read_sql_file("/queries/create_products_ordered_table.sql")
 
     # Execute the SQL queries for creating the tables
     db_query(create_table_users)
@@ -119,3 +108,4 @@ def check_database_tables_exist():
     db_query(create_table_carts)
     db_query(create_table_reviews)
     db_query(create_table_orders)
+    db_query(create_table_products_ordered)

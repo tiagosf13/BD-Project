@@ -1,5 +1,6 @@
 from views import views
 from handlers.extensions import bcrypt
+from handlers.DataBaseCoordinator import check_database_tables_exist
 from flask import Flask, render_template
 
 
@@ -8,6 +9,9 @@ app = Flask(__name__)
 app.register_blueprint(views, url_prefix='/')
 app.config['SECRET_KEY'] = 'LECI'
 bcrypt.init_app(app)
+
+# Check if the database tables exist
+check_database_tables_exist()
 
 # Define a custom error handler for 403 (Not Found) errors
 @app.errorhandler(403)

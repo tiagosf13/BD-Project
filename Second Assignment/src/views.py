@@ -20,11 +20,6 @@ from handlers.TOTPHandler import generate_totp_atributes, verify_totp_code, gene
 # Starting Blueprint
 views = Blueprint('views', __name__)
 
-
-# Check if the database tables exist
-check_database_tables_exist()
-
-
 # This route is used to serve the index page
 @views.route('/', methods=['GET'])
 def index():
@@ -634,30 +629,28 @@ def add_item_to_cart(product_id):
         return redirect(url_for("views.login"))
     elif verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
         return redirect(url_for("views.catalog", id=id))
-    
-    try:
-        data = request.get_json()
-        quantity = data.get('quantity')
+    else:
+        try:
+            data = request.get_json()
+            quantity = data.get('quantity')
 
-        if quantity <= 0:
-            return jsonify({'error': 'Invalid quantity.'}), 500
+            if quantity <= 0:
+                return jsonify({'error': 'Invalid quantity.'}), 500
+            
+            # Secure Query
+            query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
+            result = db_query(query, (product_id, id))
+            product_stock = get_product_by_id(product_id)["stock"]
+
+            if (result != [] and result[0][2] + quantity > product_stock) or (result == [] and quantity > product_stock):
+                return jsonify({'error': 'Not enough stock.'}), 500
+            else:
+                set_cart_item(id, product_id, quantity, "add")
+                return jsonify({'message': 'Product added to the cart.'}), 200
         
-        # Secure Query
-        query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
-        result = db_query(query, (product_id, id))
-        product_stock = get_product_by_id(product_id)["stock"]
-
-        if result != [] and result[0][2] + quantity > product_stock:
-            return jsonify({'error': 'Not enough stock.'}), 500
-        elif result == [] and (quantity > product_stock):
-            return jsonify({'error': 'Not enough stock.'}), 500
-        else:
-            set_cart_item(id, product_id, quantity, "add")
-            return jsonify({'message': 'Product added to the cart.'}), 200
-    
-    except Exception as e:
-        print(e)
-        return jsonify({'error': str(e)}), 500
+        except Exception as e:
+            print(e)
+            return jsonify({'error': str(e)}), 500
 
 
 @views.route('/remove_item_cart/<int:product_id>', methods=['POST'])
@@ -670,33 +663,34 @@ def remove_item_from_cart(product_id):
     
     elif verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
         return redirect(url_for("views.catalog", id=id))
+    else:
 
-    try:
-        data = request.get_json()
-        quantity = data.get('quantity')
+        try:
+            data = request.get_json()
+            quantity = data.get('quantity')
 
-        if check_product_in_cart(id, product_id) == False or quantity <= 0:
-            return jsonify({'error': 'Product not in cart.'}), 500
-        else:
-            # Secure Query
-            query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
-            result = db_query(query, (product_id, id))
-
-            if result != [] and result[0][2] == quantity:
-                # Remove the product from the cart
-                # Secure Query
-                query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?"
-                db_query(query, (product_id, id))
-                return jsonify({'message': 'Product removed from the cart.'}), 200
-            elif result != [] and result[0][2] - quantity >= 0:
-                # Secure Query: Update the user's cart in the database
-                set_cart_item(id, product_id, quantity, "remove")
-                return jsonify({'message': 'Product removed from the cart.'}), 200
+            if check_product_in_cart(id, product_id) == False or quantity <= 0:
+                return jsonify({'error': 'Product not in cart.'}), 500
             else:
-                return jsonify({'message': 'Product not in the cart.'}), 500
-    except Exception as e:
-        print(e)
-        return jsonify({'error': str(e)}), 500
+                # Secure Query
+                query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
+                result = db_query(query, (product_id, id))
+
+                if result != [] and result[0][2] == quantity:
+                    # Remove the product from the cart
+                    # Secure Query
+                    query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?"
+                    db_query(query, (product_id, id))
+                    return jsonify({'message': 'Product removed from the cart.'}), 200
+                elif result != [] and result[0][2] - quantity >= 0:
+                    # Secure Query: Update the user's cart in the database
+                    set_cart_item(id, product_id, quantity, "remove")
+                    return jsonify({'message': 'Product removed from the cart.'}), 200
+                else:
+                    return jsonify({'message': 'Product not in the cart.'}), 500
+        except Exception as e:
+            print(e)
+            return jsonify({'error': str(e)}), 500
 
 
 @views.route('/get_cart_items/', methods=['GET'])
