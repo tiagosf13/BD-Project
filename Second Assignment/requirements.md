@@ -1,0 +1,13 @@
+Flask
+Flask-Bcrypt
+pandas
+pyodbc
+datetime
+reportlab
+pyotp
+qrcode
+requests
+pyOpenSSL
+cryptography
+secrets
+openpyxl

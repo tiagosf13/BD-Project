@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Collection Information</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .content-box {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #consentResult {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-box">
+        <h1>Data Collection Information</h1>
+        <p>We may collect the following information:</p>
+        <ul>
+            <li><i class="fas fa-image"></i> Profile Photo</li>
+            <li><i class="fas fa-user"></i> Username</li>
+            <li><i class="far fa-envelope"></i> Email</li>
+            <li><i class="fas fa-map-marker-alt"></i> Shipping Address</li>
+            <li><i class="fas fa-shopping-cart"></i> Products that may be purchased</li>
+        </ul>
+
+        <form id="consentForm" action="/validate_consent" method="POST">
+            <label for="consentCheckbox">
+                <input type="checkbox" id="consentCheckbox" name="consent">
+                I consent to the collection and use of the above information for specified purposes.
+            </label>
+            <br>
+            <button type="submit">Submit</button>
+        </form>
+
+        <p id="consentResult"></p>
+    </div>
+
+    <script>
+        function validateConsent() {
+            var consentCheckbox = document.getElementById('consentCheckbox');
+            var consentResult = document.getElementById('consentResult');
+
+            if (consentCheckbox.checked) {
+                consentResult.textContent = 'Consent granted. Data can be used.';
+                // Here, you can add further actions for data processing
+                // For demonstration purposes, I'm showing a simple alert
+                alert('Data can be used.');
+            } else {
+                consentResult.textContent = 'Please provide consent to proceed.';
+            }
+        }
+    </script>
+</body>
+</html>

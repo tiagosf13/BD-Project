@@ -1,0 +1,8 @@
+*.docx
+src/credentials/
+src/credentials/
+src/database
+src/catalog
+*.xlsx
+*.pyc
+venv
