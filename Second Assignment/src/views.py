@@ -33,7 +33,7 @@ def login():
         username = request.form.get("username").lower()
         password = request.form.get("password")
 
-        if is_valid_input(username) == False:
+        if is_valid_input([username]) == False:
             return render_template("login.html", message="Invalid username.")
 
         user = search_user_by_username(username)
@@ -67,7 +67,7 @@ def signup():
         password = request.form.get("password")
         email = request.form.get("email")
 
-        if is_valid_input(username) == False or is_valid_input(email) == False:
+        if is_valid_input([username, email]) == False:
             return render_template("signup.html", message="Invalid username.")
 
 
@@ -249,7 +249,7 @@ def verify_totp_login(id):
 def reset_password():
     if request.method == "POST":
         email = request.form.get("email")
-        if is_valid_input(email) == False:
+        if is_valid_input([email]) == False:
             return render_template("reset-password.html", message="Invalid email.")
 
         user = search_user_by_email(email)
@@ -270,26 +270,28 @@ def reset_password():
 
 @views.route('/reset_password/<reset_token>', methods=['GET', 'POST'])
 def reset_password_confirm(reset_token):
+    # Update the user's password in the database with the new hashed password
+    user_id = get_user_by_reset_token(reset_token)[0]
+
+    if user_id == None:
+        return redirect(url_for('views.login'))
+
+    reset_token_valid = is_valid_reset_token(reset_token)
+
+    # Clear the reset token for security
+    clear_reset_token(user_id)
+
     # Check if the reset token is valid and not expired
-    if is_valid_reset_token(reset_token):
+    if reset_token_valid:
         if request.method == 'POST':
             new_password = request.form.get('password')
             confirm_password = request.form.get('confirm_password')
 
             if new_password == confirm_password:
-                # Update the user's password in the database with the new hashed password
-                username = get_user_by_reset_token(reset_token)[1]
-
-                if username:
-                    hashed_password = bcrypt.generate_password_hash(new_password).decode("utf-8")
-                    update_password(username, hashed_password)
-
-                    # Clear the reset token for security
-                    clear_reset_token(username)
-                    return redirect(url_for('views.login'))
+                update_password(user_id, bcrypt.generate_password_hash(new_password).decode("utf-8"))
+                return redirect(url_for('views.login'))
         return render_template('reset_password.html', reset_token=reset_token)
     else:
-        clear_reset_token(username)
         return redirect(url_for('views.login'))
 
 
@@ -298,7 +300,7 @@ def reset_password_confirm(reset_token):
 @views.route("/profile/<username>", methods=['GET'])
 def profile(username):
     
-    if is_valid_input(username) == False:
+    if is_valid_input([username]) == False:
         return render_template("index.html", message="Invalid username.")
 
     # Get ID based on the username
@@ -318,7 +320,7 @@ def check_username():
     # Get the username from the request
     username = request.form.get('username')
 
-    if is_valid_input(username) == False:
+    if is_valid_input([username]) == False:
         return render_template("signup.html", message="Invalid username.")
 
     # Check if the username exists
@@ -338,7 +340,7 @@ def check_email():
     # Get the email from the request
     email = request.form.get('email')
 
-    if is_valid_input(email) == False:
+    if is_valid_input([email]) == False:
         return render_template("signup.html", message="Invalid email.")
 
     # Check if the username exists
@@ -385,47 +387,35 @@ def update_account(id):
         password = request.form.get("psw")
         old_password = request.form.get("psw-old")
 
-        # Check if the username field wasn't empty and occupied by another user
-        if username != "" and not check_username_exists(username) and is_valid_input(username):
-
-            # Update the username
-            update_username(id, username)
-
-            # Set the session's username
-            session["username"] = username
-
+        preconditions_check = is_valid_input([username, email, password, old_password]) and \
+                                not check_username_exists(username) and \
+                                not check_email_exists(email) and \
+                                id != None and \
+                                bcrypt.check_password_hash(search_user_by_id(id)[2], old_password)
+                                
+        if preconditions_check:
+            # Check if the username field wasn't empty and occupied by another user
+            if username != "":
+                # Update the username
+                update_username(id, username)
+                # Set the session's username
+                session["username"] = username
+            # Check if the email field wasn't empty and occupied by another user
+            if email != "":
+                # Update the email
+                update_email(id, email)
+            # Check if the password wasn't empty
+            if password != "":
+                # Update the password
+                # Hash the password before storing it in the database
+                update_password(id, bcrypt.generate_password_hash(password).decode("utf-8"))
+            # Return the profile page
+            return redirect(url_for("views.catalog", id=id))
         else:
-            # If there is a problem with the username, get the username based on the ID
-            username = search_user_by_id(id)[1]
-
-        # Check if the email field wasn't empty and occupied by another user
-        if email != "" and not check_email_exists(email) and is_valid_input(email):
-
-            # Update the email
-            update_email(id, email)
-
-        else:
-            # If there is a problem with the email, get the email based on the ID
-            email = search_user_by_id(id)[3]
-
-        # Check if the password wasn't empty
-        if password != "":
-            # Update the password
-            # Hash the password before storing it in the database
-
-            if bcrypt.check_password_hash(search_user_by_id(id)[2], old_password):
-                hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-                username = search_user_by_id(id)[1]
-                update_password(username, hashed_password)
-            else:
-                return render_template("profile.html", message="Invalid password.", username=username, id=id)
-
-        # Return the profile page
-        return redirect(url_for("views.catalog", id=id))
-    
+            return jsonify({'error': 'Invalid input.'}), 500
     except Exception as e:
         print(e)
-        return render_template("profile.html", message="Invalid input.", username=username, id=id)
+        return jsonify({'error': "Internal Server Error"}), 500
 
 
 # This view is used to get a image
@@ -474,7 +464,7 @@ def add_product(id):
     if id == None:
         return redirect(url_for("views.login"))
 
-    if id is not None and is_valid_input(id) is not False:
+    if is_valid_input(id) != False:
     
         product_name = request.form.get("productName")
         product_description = request.form.get("productDescription")
@@ -483,16 +473,15 @@ def add_product(id):
         product_quantity = request.form.get("productUnits")
         product_photo = request.files.get("productImage")
 
-        preconditions = is_valid_input(product_name) == False or \
-                        is_valid_input(product_description) == False or \
-                        is_valid_input(product_price) == False or \
-                        is_valid_input(product_category) == False or \
-                        is_valid_input(product_quantity) == False or \
-                        product_photo and product_photo.content_length > 5120 * 5120 # Verify that the size of the image is less than 5MB
+        preconditions_check = is_valid_input([
+            product_name,
+            product_description,
+            product_price,
+            product_category,
+            product_quantity
+        ]) and (product_photo and product_photo.content_length < 5120 * 5120) # Verify that the size of the image is less than 5MB
 
-        if preconditions:
-            return redirect(url_for("views.catalog", id=id))
-        else:
+        if preconditions_check:
             create_product(product_name, product_description, product_price, product_category, product_quantity, product_photo)
 
     return redirect(url_for("views.catalog", id=id))
@@ -503,8 +492,12 @@ def remove_product_by_id(id):
     # Updated route name and parameter name to avoid conflicts
     product_id = request.form.get("productId")
 
-    if is_valid_input(product_id) != False and id is not None and verify_id_exists(product_id, "products") and check_product_availability(product_id) == True:
-        # Assuming 'remove_product' is a function you've defined elsewhere, you can use it here
+    preconditions_check = is_valid_input([product_id, id]) and \
+                            verify_id_exists(product_id, "products") and \
+                            check_product_availability(product_id) and \
+                            id != None
+
+    if preconditions_check:
         remove_product(product_id)
 
     return redirect(url_for("views.catalog", id=id))
@@ -513,33 +506,42 @@ def remove_product_by_id(id):
 @views.route('/edit_product/<id>', methods=['POST'])
 def edit_product_by_id(id):
 
-    product_id = request.form.get("productId")
-    product_name = request.form.get("productName")
-    product_description = request.form.get("productDescription")
-    product_price = request.form.get("productPrice")
-    product_category = request.form.get("productCategory")
-    product_quantity = request.form.get("productUnits")
-    product_photo = request.files.get("productImage")
-
-    if id is None:
+    if id == None:
         return redirect(url_for("views.login"))
+    else:
+        product_id = request.form.get("productId")
+        product_name = request.form.get("productName")
+        product_description = request.form.get("productDescription")
+        product_price = request.form.get("productPrice")
+        product_category = request.form.get("productCategory")
+        product_quantity = request.form.get("productUnits")
+        product_photo = request.files.get("productImage")
 
-    if is_valid_input(product_id) and verify_id_exists(product_id, "products"):
-        if product_name != "" and is_valid_input(product_name):
-            update_product_name(product_id, product_name)
-        if product_description != "" and is_valid_input(product_description):
-            update_product_description(product_id, product_description)
-        if product_price != "" and is_valid_input(product_price):
-            update_product_price(product_id, product_price)
-        if product_category != "" and is_valid_input(product_category):
-            update_product_category(product_id, product_category)
-        if product_quantity != "" and is_valid_input(product_quantity):
-            update_product_quantity(product_id, product_quantity)
-        if product_photo:
-            create_product_image(product_id, product_photo)
+        preconditions_check = is_valid_input([
+            product_id,
+            id,
+            product_name,
+            product_description,
+            product_price,
+            product_category,
+            product_quantity,
+        ]) and verify_id_exists(product_id, "products") and check_product_availability(product_id)
 
-
-    return redirect(url_for("views.catalog", id=id))
+        if preconditions_check:
+            # Update the product details of the atributtes that are not empty
+            if product_name != "":
+                update_product_name(product_id, product_name)
+            if product_description != "":
+                update_product_description(product_id, product_description)
+            if product_price != "":
+                update_product_price(product_id, product_price)
+            if product_category != "":
+                update_product_category(product_id, product_category)
+            if product_quantity != "":
+                update_product_quantity(product_id, product_quantity)
+            if product_photo and product_photo.content_length < 5120 * 5120:
+                create_product_image(product_id, product_photo)
+        return redirect(url_for("views.catalog", id=id))
 
 
 @views.route('/product-quantities/<id>', methods=['GET'])
@@ -595,30 +597,29 @@ def get_reviews(product_id):
 @views.route('/add_review/<product_id>/', methods=['POST'])
 def add_review(product_id):
 
-    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
-        return redirect(url_for("views.catalog", id=session.get("id")))
-
     # Get the user's id and username from the session
     user_id = session.get("id")
     username = search_user_by_id(user_id)[1]
 
-    if user_id == None:
+    if user_id == None or username == None:
         return redirect(url_for("views.login"))
-
+    
     # Get the review and rating from the request
     review = request.form.get("userReview")
     rating = request.form.get("rating")
 
-    if not is_valid_input(review) or verify_id_exists(product_id, "products") == False or rating == None:
-        return jsonify({'error': 'Invalid review.'}), 500
+    preconditions_check = is_valid_input([product_id, review]) and \
+                            verify_id_exists(product_id, "products") and \
+                            check_product_availability(product_id) and \
+                            rating != None
     
-
-    # Create the review
-    create_review(product_id, user_id, review, rating)
-
-    # Return a JSON response with the correct content type
-    response_data = {'message': 'Review added successfully', "username": username}
-    return jsonify(response_data), 200, {'Content-Type': 'application/json'}
+    if preconditions_check:
+        # Create the review
+        create_review(product_id, user_id, review, rating)
+        # Return a JSON response with the correct content type
+        return jsonify({'message': 'Review added successfully', "username": username}), 200
+    else:
+        return jsonify({'error': 'Invalid review.'}), 500
 
 
 @views.route('/add_item_cart/<int:product_id>', methods=['POST'])

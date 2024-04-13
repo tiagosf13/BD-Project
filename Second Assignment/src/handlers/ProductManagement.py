@@ -81,21 +81,22 @@ def create_product(product_name, product_description, product_price, product_cat
     # check if the product already exists
     if verify_product_exists(product_name):
         return None
+    else:
+        # Generate a unique user id
+        product_id = str(generate_random_product_id("products"))
+        
+        # Add the user to the users table
+        db_query(
+                "INSERT INTO products (product_id, product_name, product_description, price, category, stock, available) \
+                VALUES (?, ?, ?, ?, ?, ?, ?);",
+                (product_id, product_name, product_description, product_price, product_category, product_quantity, True)
+        )
 
-    # Generate a unique user id
-    id = str(generate_random_product_id("products"))
-    
-    # Add the user to the USER table
-    # Secure Query
-    db_query("INSERT INTO products (product_id, product_name, product_description, price, category, stock, available) VALUES (?, ?, ?, ?, ?, ?, ?);",
-            (id, product_name, product_description, product_price, product_category, product_quantity, True)
-    )
+        # Create a folder for the user
+        create_product_image(product_id, product_photo)
 
-    # Create a folder for the user
-    create_product_image(id, product_photo)
-
-    # Return the created user
-    return id
+        # Return the created user
+        return product_id
 
 
 def remove_product(id):

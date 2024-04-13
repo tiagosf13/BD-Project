@@ -9,19 +9,19 @@ from handlers.Retrievers import get_current_dir
 from datetime import datetime, timedelta  # For working with token expiration
 
 
-def clear_reset_token(user):
+def clear_reset_token(user_id):
     # Build the query to update the reset_token in the user's table
     # Secure Query
-    query = "UPDATE users SET reset_token = NULL WHERE username = ?;"
-    db_query(query, (user))
-    query = "UPDATE users SET reset_token_timestamp = NULL WHERE username = ?;"
-    db_query(query, (user))
+    query = "UPDATE users SET reset_token = NULL WHERE user_id = ?;"
+    db_query(query, (user_id))
+    query = "UPDATE users SET reset_token_timestamp = NULL WHERE user_id = ?;"
+    db_query(query, (user_id))
 
 def get_user_by_reset_token(reset_token):
 
     # Build the query to retrieve the user's data
     # Secure Query
-    query = "SELECT * FROM users WHERE password_reset_token = ?"
+    query = "SELECT user_id FROM users WHERE password_reset_token = ?"
     result = db_query(query, (reset_token))
 
     return result[0] if result else None
