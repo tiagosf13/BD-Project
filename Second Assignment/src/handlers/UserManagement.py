@@ -9,6 +9,39 @@ from handlers.Retrievers import get_current_dir
 from datetime import datetime, timedelta  # For working with token expiration
 
 
+def search_user(search_regex, search_regex_value, select_attribute = "*"):
+
+    # Search user by a given regex
+    query = f"SELECT {select_attribute} FROM users WHERE {search_regex} = ?;"
+    result = db_query(query, (search_regex_value))
+    print(result)
+    attributes_lst = [
+        "user_id",
+        "username",
+        "hashed_password",
+        "password_reset_token",
+        "password_reset_token_timestamp",
+        "email",
+        "totp_secret_key",
+        "totp_secret_key_timestamp",
+        "admin_role"
+    ]
+
+    select_attribute_split = select_attribute.split(",") if select_attribute != "*" else attributes_lst
+
+
+    # Create a dictionary to store the user's information
+    dic = {}
+    if result:
+        for i in range(len(result[0])):
+            dic[select_attribute_split[i].strip()] = result[0][i]
+        print(dic)
+        return dic
+    else:
+        return None
+
+
+
 def clear_reset_token(user_id):
     # Build the query to update the reset_token in the user's table
     # Secure Query
@@ -82,26 +115,6 @@ def send_password_reset_email(email, reset_token):
     return send_email(email, "Reset your password", body)
 
 
-
-
-def search_user_by_username(username):
-
-    # Secure Query
-    query = "SELECT * FROM users WHERE username = ?"
-    result = db_query(query, (username))
-
-    return result[0] if result else None
-
-
-def search_user_by_email(email):
-
-    # Secure Query
-    query = "SELECT * FROM users WHERE email = ?"
-    result = db_query(query, (email))
-
-    return result[0][1] if result else None
-
-
 def validate_login(username, password):
 
     # If username is None, return False (user not found)
@@ -136,7 +149,7 @@ def generate_password(length):
 def send_recovery_password(email):
 
     # Search for the user with the given email
-    user = search_user_by_email(email)
+    user = search_user(email, "email")
     id = get_id_by_username(user)
 
     # If user is None, return False (user not found)
@@ -145,7 +158,7 @@ def send_recovery_password(email):
     else:
 
         # Extract the username and password from the user
-        name = user
+        name = user["username"]
         password = generate_password(15)
         change_password(id, password)
 
@@ -267,16 +280,6 @@ def update_username(id, new_username):
     db_query(query, (new_username, id))
 
 
-def search_user_by_id(id):
-
-    # Construct the SQL query
-    # Secure Query
-    query = "SELECT * FROM users WHERE user_id = ?"
-    result = db_query(query, (id))
-
-    return result[0] if result else None
-
-
 def update_email(id, email):
 
     # Verify if the email is valid
@@ -350,7 +353,9 @@ def calculate_total_price(products):
 
 def get_orders_by_user_id(id):
 
-    query = "SELECT * FROM orders WHERE user_id = ?;"
+    query = "SELECT orders.order_id, product_id, shipping_address, order_date, quantity FROM orders \
+            LEFT JOIN products_ordered ON orders.order_id = products_ordered.order_id \
+            WHERE orders.user_id = ?;"
     results = db_query(query, (id))
 
     # Check if the user has any orders
@@ -361,17 +366,16 @@ def get_orders_by_user_id(id):
     product = {}
     for row in results:
         order_id = row[0]
-        product_id = row[2]
-        order_address = row[5]
-        order_date = row[6]
+        product_id = row[1]
+        order_address = row[2]
+        order_date = row[3]
+        quantity = row[4]
 
         # Remove milliseconds part from the string
         order_date_str_without_ms = order_date.split('.')[0]
 
         # Convert the string to a datetime object
         order_date = datetime.strptime(order_date_str_without_ms, "%Y-%m-%d %H:%M:%S")
-        
-        quantity = row[3]
 
         # Get product information by id
         product__ = get_product_by_id(product_id)

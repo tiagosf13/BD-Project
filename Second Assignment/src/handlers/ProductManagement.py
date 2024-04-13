@@ -191,7 +191,7 @@ def set_cart_item(id, product_id, quantity, operation):
 
 
 def register_order(user_id, order_details, products):
-    try:
+    #try:
         products_to_register = {}
         total_price = 0
         for product in products:
@@ -204,12 +204,15 @@ def register_order(user_id, order_details, products):
         # Register in all orders
         # Secure Query
         for product in products:
-            query = "INSERT INTO orders (order_id, user_id, product_id, quantity, total_price, shipping_address, order_date) VALUES (?, ?, ?, ?, ?, ?, ?);"
-            db_query(query, (order_id, user_id, product["product_id"], product["quantity"], total_price, order_details["shipping_address"], time))
+            query = "INSERT INTO orders (order_id, user_id, total_price, shipping_address, order_date) VALUES (?, ?, ?, ?, ?);"
+            db_query(query, (order_id, user_id, total_price, order_details["shipping_address"], time))
+
+            query = "INSERT INTO products_ordered (order_id, product_id, quantity) VALUES (?, ?, ?);"
+            db_query(query, (order_id, product["product_id"], product["quantity"]))
 
         return True, order_id
-    except:
-        return False, None
+    #except:
+    #    return False, None
     
 
 def update_product_after_order(products):

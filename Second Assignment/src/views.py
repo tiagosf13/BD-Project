@@ -1,15 +1,15 @@
 import os, tempfile
 from handlers.extensions import bcrypt
-from handlers.UserManagement import search_user_by_email, get_id_by_username, send_password_reset_email
+from handlers.UserManagement import send_password_reset_email
 from flask import Blueprint, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
-from handlers.UserManagement import search_user_by_username, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
-from handlers.UserManagement import update_username, search_user_by_id, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
+from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
+from handlers.UserManagement import update_username, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
 from handlers.UserManagement import get_user_role, compose_email_body, update_password, generate_reset_token, set_reset_token_for_user
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
 from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
 from handlers.ProductManagement import update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import check_database_tables_exist, db_query
+from handlers.DataBaseCoordinator import db_query
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
@@ -36,11 +36,12 @@ def login():
         if is_valid_input([username]) == False:
             return render_template("login.html", message="Invalid username.")
 
-        user = search_user_by_username(username)
-        id = get_id_by_username(username)
+        user = search_user("username", username, "user_id, hashed_password")
+        print("user")
+        print(user)
 
-        if user and bcrypt.check_password_hash(user[2], password):
-            return redirect(url_for("views.verify_totp_login", id=id))
+        if user["user_id"] and bcrypt.check_password_hash(user["hashed_password"], password):
+            return redirect(url_for("views.verify_totp_login", id=user["user_id"]))
 
         # Password is incorrect
         return render_template("login.html", message="Invalid login credentials.")
@@ -70,9 +71,8 @@ def signup():
         if is_valid_input([username, email]) == False:
             return render_template("signup.html", message="Invalid username.")
 
-
         # Check if there is no user in the database using the same email or the same username
-        if search_user_by_email(email) != None or search_user_by_username(username) != None:
+        if check_username_exists(username) or check_email_exists(email):
             return render_template("signup.html", message="User already exists.")
         else:
             # Hash the password before storing it in the database
@@ -137,10 +137,11 @@ def verify_totp_signup():
         if ans == False:
             return render_template("signup.html", message="Error! Please try again.")
         else:
+            session["token"] = generate_reset_token()
             # Redirect to the emergency codes page
             return redirect(url_for("views.emergency_codes", id=id))
     else:
-        return render_template("signup.html", message="Invalid TOTP code. Please try again.")
+        return jsonify({'error': 'Invalid TOTP code. Please try again.'}), 500
     
 @views.route('/totp_profile/<id>', methods=['GET'])
 def totp_profile(id):
@@ -148,25 +149,25 @@ def totp_profile(id):
     if id == None:
         return redirect(url_for("views.login"))
 
-    username = search_user_by_id(id)[1]
+    user = search_user("user_id", id, "username, secret_key")
 
-    if username == None:
+    if user["username"] == None:
         return redirect(url_for("views.login"))
     
-    secret_key = get_totp_secret(id)
+    secret_key = user["secret_key"]
 
-    qr_code_base64 = generate_qr_code(secret_key, username)
+    qr_code_base64 = generate_qr_code(secret_key, user["username"])
 
-    return render_template("totp_profile.html", id=id, secret_key=secret_key, qr_code=qr_code_base64, username=username)
+    return render_template("totp_profile.html", id=id, secret_key=secret_key, qr_code=qr_code_base64, username=user["username"])
 
 
 @views.route('/new_emergency_codes/<id>', methods=['GET'])
 def new_emergency_codes(id):
 
-    if id == None:
+    if session.get("id") != id or session.get("id") == None or id == None or is_valid_input([id]) == False:
         return redirect(url_for("views.login"))
 
-    username = search_user_by_id(id)[1]
+    username = search_user("user_id", id, "username")["username"]
 
     if username == None:
         return redirect(url_for("views.login"))
@@ -176,21 +177,21 @@ def new_emergency_codes(id):
     return render_template("new_emergency_codes.html", id=id, username=username)
 
 
-@views.route('/emergency_codes/<id>', methods=['GET'])
+@views.route('/emergency_codes/<id>/', methods=['GET'])
 def emergency_codes(id):
 
-    if id == None:
+    if id == None or is_valid_input([id]) == False or search_user("user_id", id, "username") == None or session.get("token") == None:
+        # Clear the token from the session
+        session.pop("token", None)
         return redirect(url_for("views.login"))
-
-    username = search_user_by_id(id)[1]
-
-    if username == None:
-        return redirect(url_for("views.login"))
-
-    return render_template("emergency_codes.html", id=id)
+    else:
+        return render_template("emergency_codes.html", id=id)
 
 @views.route('/get_codes/<id>', methods=['GET'])
 def get_emergency_codes(id):
+
+    if session.get("id") != id or session.get("id") == None or is_valid_input([id]) == False or id  == None:
+        return redirect(url_for("views.login"))
 
     # Generate 10 emergency codes, each with 15 characters (Upper case letters, Lower case letters, Special characters and numbers)
     codes = generate_emergency_codes(id)
@@ -208,7 +209,7 @@ def verify_totp_login(id):
     if request.method == "GET":
         return render_template("totp_login.html", id=id)
     else:
-        username = search_user_by_id(id)[1]
+        username = search_user("user_id", id, "username")["username"]
 
         token = request.get_json().get("token") if request.is_json else None
 
@@ -217,32 +218,24 @@ def verify_totp_login(id):
 
         secret_key = get_totp_secret(id)
 
-        verified = verify_totp_code(token, secret_key)
+        # Get all the emergency codes
+        emergency_codes = get_user_emergency_codes(id)
 
-
+        preconditions_check = token != None and \
+                                emergency_codes != None and \
+                                (token in emergency_codes and emergency_codes[token] == True)
         # Verify the TOTP code
-        if verified == True:
-            # Set session variables
-            session["username"] = username
-            session["id"] = id
-            session["admin"] = get_user_role(session["id"])
-            return jsonify({'message': 'Login successful.'}), 200
-        else:
-
-            # Get all the emergency codes
-            emergency_codes = get_user_emergency_codes(id)
-
-            # Check if the token is an emergency code
-            if token!=None and token in emergency_codes and emergency_codes[token] == True:
-                remove_valid_emergency_code(id, token)
-                # Set session variables
-                session["username"] = username
-                session["id"] = id
-                session["admin"] = get_user_role(session["id"])
-                return jsonify({'message': 'Login successful.'}), 200
-
-            # Return a JSON response indicating failure with status code 500
+        if preconditions_check:
+            remove_valid_emergency_code(id, token)
+        if not verify_totp_code(token, secret_key):
             return jsonify({'error': 'Invalid TOTP code. Please try again.'}), 500
+        
+        # Set session variables
+        session["username"] = username
+        session["id"] = id
+        session["admin"] = get_user_role(session["id"])
+
+        return jsonify({'message': 'Login successful.'}), 200
 
 # This route is used to let the user reset their password
 @views.route("/reset-password", methods=["GET", "POST"])
@@ -252,15 +245,16 @@ def reset_password():
         if is_valid_input([email]) == False:
             return render_template("reset-password.html", message="Invalid email.")
 
-        user = search_user_by_email(email)
-        if user is None:
+        username = search_user("email", email, "username")["username"]
+        
+        if username is None:
             # If the user doesn't exist, return the signup page
             return redirect(url_for("views.signup"))
         else:
             # Generate a unique reset token
             reset_token = generate_reset_token()
             # Store the reset token in the user's record in the database
-            set_reset_token_for_user(user, reset_token)
+            set_reset_token_for_user(username, reset_token)
             # Send a password reset email with the token
             send_password_reset_email(email, reset_token)
             return redirect(url_for("views.login"))
@@ -391,8 +385,8 @@ def update_account(id):
                                 not check_username_exists(username) and \
                                 not check_email_exists(email) and \
                                 id != None and \
-                                bcrypt.check_password_hash(search_user_by_id(id)[2], old_password)
-                                
+                                bcrypt.check_password_hash(search_user("user_id", id, "hashed_password")["hashed_password"], old_password)
+
         if preconditions_check:
             # Check if the username field wasn't empty and occupied by another user
             if username != "":
@@ -433,21 +427,17 @@ def get_image(filename):
 
 @views.route('/catalog/<id>', methods=['GET'])
 def catalog(id):
-    if id == None or session.get("id") == None:
+    if id == None or session.get("id") == None or is_valid_input([id]) == False:
         return redirect(url_for("views.login"))
 
     # Get the username and id from the session
-    name = search_user_by_id(id)[1]
-    admin = get_user_role(id)
+    user = search_user("user_id", id, "username, admin_role")
 
-    if is_valid_input(name) == False:
-        return render_template("index.html", message="Invalid username.")
-
-    if admin:
-        return render_template("catalog_admin.html", username=name, id=id, admin=admin)
+    if user["admin_role"] == True:
+        return render_template("catalog_admin.html", username=user["username"], id=id, admin=True)
     else:
         # Return the catalog page
-        return render_template("catalog.html", username=name, id=id, admin=admin)
+        return render_template("catalog.html", username=user["username"], id=id, admin=False)
 
 
 @views.route('/products', methods=['GET'])
@@ -589,7 +579,7 @@ def get_reviews(product_id):
         return jsonify([])
     else:
         for element in reviews:
-            element["username"] = search_user_by_id(element["user_id"])[1]
+            element["username"] = search_user("user_id", element["user_id"], "username")["username"]
 
     return jsonify(reviews)
 
@@ -599,10 +589,10 @@ def add_review(product_id):
 
     # Get the user's id and username from the session
     user_id = session.get("id")
-    username = search_user_by_id(user_id)[1]
-
-    if user_id == None or username == None:
+    if user_id == None:
         return redirect(url_for("views.login"))
+    
+    username = search_user("user_id", user_id, "username")["username"]
     
     # Get the review and rating from the request
     review = request.form.get("userReview")
@@ -633,7 +623,7 @@ def add_item_to_cart(product_id):
     else:
         try:
             data = request.get_json()
-            quantity = data.get('quantity')
+            quantity = int(data.get('quantity'))
 
             if quantity <= 0:
                 return jsonify({'error': 'Invalid quantity.'}), 500
@@ -731,7 +721,6 @@ def checkout():
     if user_id == None:
         return redirect(url_for("views.login"))
 
-    username = search_user_by_id(user_id)[1].lower()
     if request.method == 'POST':
         # Get form data from the request
         data = request.get_json()
