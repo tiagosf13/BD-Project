@@ -14,7 +14,6 @@
     </header>
     <a href="#" id="backToCatalog">Back to Catalog</a>
     <div class="product-details">
-        <!-- Display product image, price, and ID here -->
         <img src="/get_image/catalog/{{product.id}}.png" alt="Product Image">
         <div class="product-info">
             <p class="product-name">{{product.name}}</p>
@@ -34,7 +33,7 @@
             </button>
             <button id="removeFromCart" class="cart-button">
                 <i class="fas fa-trash"></i>
-            </button>           
+            </button>
         </div>
     </div>
     <div class="shopping-cart">
@@ -75,26 +74,31 @@
 
     <!-- Include the external JavaScript file -->
     <script type="text/javascript">
-        const productId = '{{product.id}}'; // Assign the product ID to a JavaScript variable
-        const product = {
-            id: '{{product.id}}',
-            name: '{{product.name}}',
-            description: '{{product.description}}',
-            price: '{{product.price}}',
-            stock: '{{product.stock}}'
-        };
+    const productId = '{{product.id}}'; // Assign the product ID to a JavaScript variable
+    const product = {
+        id: '{{product.id}}',
+        name: '{{product.name}}',
+        description: '{{product.description}}',
+        price: '{{product.price}}',
+        stock: '{{product.stock}}'
+    };
 
-        const productJSON = JSON.stringify(product);
+    const productJSON = JSON.stringify(product);
 
     </script>
 
-    <script type="text/javascript" src="{{url_for('static', filename='js/product.js')}}"></script>
+    <!-- Include the external JavaScript file -->
+    <script type="text/javascript">
+        // Display the example review
+        displayReview(exampleReview);
+    </script>
 
+    <script type="text/javascript" src="{{url_for('static', filename='js/product.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='js/catalog_cart.js')}}"></script>
     <script>
         // Call the function to update the cart display when the page loads
         updateCartDisplay();
     </script>
-
 </body>
 </html>
+

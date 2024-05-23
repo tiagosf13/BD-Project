@@ -20,13 +20,11 @@ def is_valid_input(text_list):
     for review_text in text_list:
         # Check if the review contains only characters not in the valid pattern
 
-        valid = valid_characters_pattern.match(review_text) or \
-                re.search(r"<script>", review_text) or \
+        not_valid = re.search(r"<script>", review_text) or \
                 re.search(r"onload=", review_text) or \
                 re.search(r"<img", review_text) or \
                 "'" in review_text
-
-        if not valid:
+        if not_valid:
             return False
     # If none of the checks above returned False, the review is valid
     return True
@@ -36,11 +34,13 @@ def check_email_exists(email):
 
     #Execute the query to check if the email exists in the user's table
     # Secure Query
-    query = "SELECT CASE WHEN EXISTS (SELECT 1 FROM users WHERE email = ?) THEN 1 ELSE 0 END;"
-    result = db_query(query, (email))
+    query = "SELECT user_id FROM users WHERE email = ?;"
+    result = db_query(query, (email,))
 
-    # Return the boolean
-    return result[0][0]
+    if len(result) > 0:
+        return True
+    else:
+        return False
 
 
 def check_product_in_cart(user_id, product_id):

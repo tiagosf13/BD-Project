@@ -95,7 +95,8 @@ function displayReview(review) {
 
     listItem.innerHTML = `
         <strong>${review.username}</strong> ${review.rating}★<br>
-        <p class="review-paragraph">${review.review}</p>
+        <p class="review-paragraph">${review.review}</p><br>
+        <small class="review-date">${review.review_date}</small>
     `;
 
     // Insert the new review at the beginning of the list

@@ -74,6 +74,10 @@ function checkPasswordCriteria() {
     var password = document.getElementById("psw").value;
     var confirm_password = document.getElementById("psw-repeat").value;
 
+    if (password == "") {
+        return true;
+    }
+
     // Make an AJAX request to Flask route for breach verification
     fetch('/verify-password', {
         method: 'POST',

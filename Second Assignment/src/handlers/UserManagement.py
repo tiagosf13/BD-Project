@@ -14,7 +14,6 @@ def search_user(search_regex, search_regex_value, select_attribute = "*"):
     # Search user by a given regex
     query = f"SELECT {select_attribute} FROM users WHERE {search_regex} = ?;"
     result = db_query(query, (search_regex_value))
-    print(result)
     attributes_lst = [
         "user_id",
         "username",
@@ -35,7 +34,6 @@ def search_user(search_regex, search_regex_value, select_attribute = "*"):
     if result:
         for i in range(len(result[0])):
             dic[select_attribute_split[i].strip()] = result[0][i]
-        print(dic)
         return dic
     else:
         return None
@@ -45,10 +43,11 @@ def search_user(search_regex, search_regex_value, select_attribute = "*"):
 def clear_reset_token(user_id):
     # Build the query to update the reset_token in the user's table
     # Secure Query
-    query = "UPDATE users SET reset_token = NULL WHERE user_id = ?;"
-    db_query(query, (user_id))
-    query = "UPDATE users SET reset_token_timestamp = NULL WHERE user_id = ?;"
-    db_query(query, (user_id))
+    query = """
+        UPDATE users SET reset_token = NULL WHERE user_id = ?;
+        UPDATE users SET reset_token_timestamp = NULL WHERE user_id = ?;
+    """
+    db_query(query, (user_id, user_id))
 
 def get_user_by_reset_token(reset_token):
 
@@ -91,12 +90,11 @@ def set_reset_token_for_user(user, reset_token):
     # Build the query to update the reset_token in the user's table
 
     # Secure Query
-    query = "UPDATE users SET password_reset_token = ? WHERE username = ?"
-    db_query(query, (reset_token, user))
-
-    # Secure Query to set the reset_token_timestamp
-    query = "UPDATE users SET password_reset_token_timestamp = ? WHERE username = ?"
-    db_query(query, (datetime.now(), user))
+    query = """
+        UPDATE users SET password_reset_token = ? WHERE username = ?;
+        UPDATE users SET password_reset_token_timestamp = ? WHERE username = ?
+    """
+    db_query(query, (reset_token, user, datetime.now(), user))
 
 
 # Send a password reset email with the token
@@ -251,7 +249,7 @@ def create_user(username, password, email, secret_key, secret_key_timestamp):
 
     # Secure Query
     # Assuming you are using SQL Server
-    query_insert = "INSERT INTO users (user_id, username, hashed_password, email, totp_secret_key, totp_secret_key_timestamp, admin_role) OUTPUT INSERTED.user_id VALUES (?, ?, ?, ?, ?, ?, ?);"
+    query_insert = "INSERT INTO users (user_id, username, hashed_password, email, totp_secret_key, totp_secret_key_timestamp, admin_role) VALUES (?, ?, ?, ?, ?, ?, ?);"
 
     # Execute the insertion query
     id = db_query(query_insert, (id, username, password, email, secret_key, secret_key_timestamp, False))[0][0]
@@ -396,40 +394,43 @@ def get_orders_by_user_id(id):
 
 
 def get_user_data_by_id(id):
-
     info = {}
-    results = []
 
-    # Construct the SQL query to retrieve the username, email and id
-    # Secure Query
-    query1 = "SELECT user_id, username, email FROM users WHERE user_id = ?"
-    query1_results = db_query(query1, (id))
-    results.append(list(query1_results[0]) if query1_results else [])
+    # Construct the SQL query to retrieve user's info, orders, and reviews
+    query = """
+        SELECT 
+            u.user_id, 
+            u.username, 
+            u.email, 
+            o.order_id, 
+            po.product_id, 
+            po.quantity, 
+            o.shipping_address, 
+            o.order_date, 
+            r.rating, 
+            r.review_text
+        FROM 
+            users u
+        LEFT JOIN 
+            orders o ON u.user_id = o.user_id
+        LEFT JOIN
+            products_ordered po ON  po.order_id = o.order_id
+        LEFT JOIN 
+            reviews r ON u.user_id = r.user_id
+        WHERE 
+            u.user_id = ?
+    """
+    query_results = db_query(query, (id))
 
-    # Construct the SQL query to retrieve all the user's orders
-    # Secure Query
-    query2 = "SELECT * FROM orders WHERE user_id = ?"
-    query2_results = db_query(query2, (id))
-    results.append(list(query2_results) if query2_results else [])
+    if query_results:
+        for row in query_results:
+            if 'personal_info' not in info:
+                info['personal_info'] = [{"User ID": row[0], "Username": row[1], "E-mail": row[2]}]
+            if 'orders' not in info:
+                info['orders'] = [{"Order ID": row[3], "Product": get_product_by_id(row[4])["name"], "Product ID": row[4], "Quantity": row[5], "Address": row[6], "Date": row[7]}]
+            if 'reviews' not in info:
+                info['reviews'] = [{"Product ID": row[4], "Rating": row[8], "Review": row[9]}]
 
-    # Construct the SQL query to retrieve all the user's reviews
-    # Secure Query
-    query3 = "SELECT product_id, rating, review_text FROM reviews WHERE user_id = ?"
-    query3_results = db_query(query3, (id))
-    results.append(list(query3_results) if query3_results else [])
-
-    counter = 0
-    for result in results:
-        if result:
-            if counter == 0:
-                info['personal_info'] = [{ "User ID" : result[0], "Username" : result[1], "E-mail" : result[2]}]
-            elif counter == 1:
-                info['orders'] = [{"Order ID" : order[0], "Product" : get_product_by_id(order[2])["name"], "Product ID" : order[2], "Quantity" : order[3], "Address" : order[5], "Date" : order[6]} for order in result]
-            elif counter == 2:
-                info['reviews'] = [{"Product ID" : review[0], "Rating" : review[1], "Review" : review[2]} for review in result]
-        counter += 1
-
-    # Return the user data
     return info
 
 

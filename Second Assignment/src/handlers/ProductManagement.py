@@ -7,7 +7,7 @@ from handlers.DataBaseCoordinator import db_query
 def verify_product_exists(product_name):
 
     # Secure Query: Check if the ID exists in the specified table
-    query = "SELECT * FROM products WHERE product_name = ?;"
+    query = "SELECT product_id FROM products WHERE product_name = ?;"
     results = db_query(query, (product_name))
 
     if len(results) == 0:
@@ -28,14 +28,16 @@ def verify_id_exists(id, table):
 
     # Secure Query: Check if the ID exists in the specified table
     if table == "products":
-        query = "SELECT * FROM products WHERE product_id = ?;"
+        query = "SELECT product_id FROM products WHERE product_id = ?;"
     elif table == "reviews":
-        query = "SELECT * FROM reviews WHERE review_id = ?;"
+        query = "SELECT product_id FROM reviews WHERE review_id = ?;"
     elif table == "orders":
-        query = "SELECT * FROM orders WHERE order_id = ?;"
-
+        query = "SELECT user_id FROM orders WHERE order_id = ?;"
+   
     results = db_query(query, (id))
 
+    print(results)
+    print("ID:", id)
     if len(results) == 0:
         return False
     else:
@@ -102,13 +104,11 @@ def create_product(product_name, product_description, product_price, product_cat
 def remove_product(id):
 
     # Secure Query to delete the product from the carts
-    query = "DELETE FROM carts WHERE product_id = ?;"
-    db_query(query, (id))
-
-    # Secure Query
-    query = "UPDATE products SET available = 0 WHERE product_id = ?;"
-    db_query(query, (id))
-
+    query = """
+        DELETE FROM carts WHERE product_id = ?;
+        UPDATE products SET available = 0 WHERE product_id = ?;
+    """
+    db_query(query, (id, id))
     return True
 
 
@@ -191,7 +191,7 @@ def set_cart_item(id, product_id, quantity, operation):
 
 
 def register_order(user_id, order_details, products):
-    #try:
+    try:
         products_to_register = {}
         total_price = 0
         for product in products:
@@ -201,18 +201,22 @@ def register_order(user_id, order_details, products):
         order_id = str(generate_random_product_id("orders"))
         time = datetime.now()
         
+        query = """
+            INSERT INTO orders (order_id, user_id, total_price, shipping_address, order_date) VALUES (?, ?, ?, ?, ?);
+        """
+        db_query(query, (order_id, user_id, total_price, order_details["shipping_address"], time))
+        
         # Register in all orders
         # Secure Query
-        for product in products:
-            query = "INSERT INTO orders (order_id, user_id, total_price, shipping_address, order_date) VALUES (?, ?, ?, ?, ?);"
-            db_query(query, (order_id, user_id, total_price, order_details["shipping_address"], time))
-
-            query = "INSERT INTO products_ordered (order_id, product_id, quantity) VALUES (?, ?, ?);"
+        for product in products[1:]:
+            query = """
+                INSERT INTO products_ordered (order_id, product_id, quantity) VALUES (?, ?, ?);
+            """
             db_query(query, (order_id, product["product_id"], product["quantity"]))
 
         return True, order_id
-    #except:
-    #    return False, None
+    except:
+       return False, None
     
 
 def update_product_after_order(products):

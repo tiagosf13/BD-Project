@@ -20,6 +20,8 @@ def generate_emergency_codes(id, n_codes=10, code_length=6, reset=False):
     return emergency_codes
 
 def get_user_emergency_codes(id):
+    # TODO: Verificar se o user_id é valido
+    # mudar e verificar se existe o codigo
     if check_existence_emergency_codes(id):
         query = "SELECT emergency_code FROM emergency_codes WHERE user_id = ?"
         result = db_query(query, (id))
@@ -31,12 +33,16 @@ def get_user_emergency_codes(id):
     return None
 
 def remove_valid_emergency_code(id, code):
-    if check_existence_emergency_codes(id):
-        emergency_codes = get_user_emergency_codes(id)
-        if code in emergency_codes:
-            emergency_codes[code] = False
-            store_emergency_codes(id, emergency_codes)
-            return True
+    
+    query = """
+        UPDATE emergency_codes
+        SET emergency_code_valid = 0
+        WHERE emergency_code = ? AND user_id = ?;
+    """
+    result = db_query(query, (code, id))
+    # Check if the query was successful
+    if result:
+        return True
     return False
 
 def check_existence_emergency_codes(id):
@@ -90,7 +96,7 @@ def update_totp(id, secret_key, secret_key_timestamp):
     # Store the secret key securely for each user, maybe in a database
     # For demonstration purposes, a dictionary is used here to store secrets
     
-    query = "UPDATE users SET secret_key = %s, secret_key_timestamp = %s WHERE id = %s;"
+    query = "UPDATE users SET secret_key = ?, secret_key_timestamp = ? WHERE id = ?;"
     db_query(query, (secret_key, secret_key_timestamp, id))
 
 

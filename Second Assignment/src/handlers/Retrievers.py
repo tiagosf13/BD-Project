@@ -14,30 +14,6 @@ def get_current_dir():
     return current_directory
 
 
-def get_orders(username_orders):
-
-    # Secure Query
-    query = "SELECT * FROM %s"
-    result = db_query(query, (username_orders,))
-
-
-    orders = {}
-
-    for element in result:
-        current_order_id = element[2]
-
-        if current_order_id not in orders:
-            orders[current_order_id] = []
-        else:
-            orders[current_order_id].append({
-                "product_id": element[0],
-                "quantity": element[1],
-                "name" : get_product_by_id(element[0])["name"],
-                "price" : get_product_by_id(element[0])["price"]
-            })
-    return orders
-
-
 
 def get_all_products():
     # Secure Query - Select specific columns
@@ -58,7 +34,7 @@ def get_all_products():
 
 def verify_product_id_exists(id):
     # Secure Query
-    query = "SELECT * FROM products WHERE product_id = ?"
+    query = "SELECT product_name FROM products WHERE product_id = ?"
     results = db_query(query, (id))
 
     if len(results) == 0:
@@ -106,7 +82,8 @@ def get_product_reviews(product_id):
             "product_id": row[1],
             "user_id": row[2],
             "rating": row[3],
-            "review": row[4]
+            "review": row[4],
+            "review_date": row[5]
         }
         reviews.append(review)
 
@@ -124,22 +101,28 @@ def check_product_availability(product_id):
 
 def get_cart(user_id):
 
-    query = "SELECT * FROM carts WHERE user_id=?;"
+    query = """
+        SELECT products.product_id, quantity, products.product_name, products.price
+        FROM carts
+        JOIN products ON carts.product_id = products.product_id
+        WHERE user_id=?
+        ;
+    """
     result = db_query(query, (user_id))
 
     cart = []
 
     for element in result:
-        if not ((check_product_availability(element[1]) and verify_product_id_exists(element[1]) and element[2] > 0 and element[2] <= get_product_by_id(element[1])["stock"])):
+        if not (check_product_availability(element[0]) and element[1] > 0 and element[1] <= get_product_by_id(element[0])["stock"]):
             delete_query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?;"
-            db_query(delete_query, (element[1], user_id))
+            db_query(delete_query, (element[0], user_id))
 
         else:
             cart.append({
-                "product_id": element[1],
-                "quantity": element[2],
-                "name": get_product_by_id(element[1])["name"],
-                "price": get_product_by_id(element[1])["price"]
+                "product_id": element[0],
+                "quantity": element[1],
+                "name": element[2],
+                "price": element[3]
             })
     return cart
 

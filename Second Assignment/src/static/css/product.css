@@ -87,6 +87,17 @@ a:hover {
     margin-top: 5%;
 }
 
+/* Style for the review date */
+.review-date {
+    color: black;
+    /* Use Italic */
+    font-style: italic;
+    padding: 2px;
+    border-radius: 5px;
+    font-size: smaller; /* Reduce the font size */
+}
+
+
 
 /* Style the review form container */
 #reviewForm {
