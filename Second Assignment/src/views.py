@@ -223,7 +223,6 @@ def verify_totp_login(id):
                                 emergency_codes != None and \
                                 (token in emergency_codes and emergency_codes[token] == True)
         
-        print("Precond: ", preconditions_check)
         # Verify the TOTP code
         if preconditions_check:
             remove_valid_emergency_code(id, token)
@@ -443,10 +442,22 @@ def catalog(id):
 
 @views.route('/products', methods=['GET'])
 def products():
-
-    products = get_all_products()
     
-    print(products)
+    # Extract query parameters
+    search_term = request.args.get('searchTerm', '')
+    selected_category = request.args.get('selectedCategory')
+    min_price = request.args.get('minPrice', 0, type=float)
+    max_price = request.args.get('maxPrice', float('inf'), type=float)
+    in_stock = request.args.get('inStock', True, type=bool)
+    sort_order = request.args.get('sortOrder', 'asc')
+    
+    if max_price == float('inf'):
+        max_price=1000000
+
+    if selected_category == None or selected_category == 'all':
+        selected_category = ""
+
+    products = get_all_products(search_term, selected_category, min_price, max_price, in_stock, sort_order)
 
     return jsonify(products)
 

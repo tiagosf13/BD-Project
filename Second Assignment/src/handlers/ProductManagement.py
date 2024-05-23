@@ -201,6 +201,10 @@ def register_order(user_id, order_details, products):
         order_id = str(generate_random_product_id("orders"))
         time = datetime.now()
         
+        print("Products:", products)
+        print("Total Price:", total_price)
+        print("Order ID:", order_id)
+        
         query = """
             INSERT INTO orders (order_id, user_id, total_price, shipping_address, order_date) VALUES (?, ?, ?, ?, ?);
         """
@@ -208,7 +212,7 @@ def register_order(user_id, order_details, products):
         
         # Register in all orders
         # Secure Query
-        for product in products[1:]:
+        for product in products:
             query = """
                 INSERT INTO products_ordered (order_id, product_id, quantity) VALUES (?, ?, ?);
             """
