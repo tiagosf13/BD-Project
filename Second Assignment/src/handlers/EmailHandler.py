@@ -32,20 +32,32 @@ def get_username_by_id(id):
 
 
 def sql_to_pdf(user_id, output_path):
+    
+    # Product ID - 0
+    # Product Quantity - 1
+    # Product Name - 2
+    # Quantity - 3
+    # Price - 4
+    # Total - 5
 
-    query = "SELECT * FROM carts WHERE user_id = ?"
+    # Query to join carts and products tables
+    query = """
+        SELECT carts.product_id, carts.quantity, products.product_name, products.price, carts.quantity * products.price AS total
+        FROM carts
+        JOIN products ON carts.product_id = products.product_id
+        WHERE carts.user_id = ?
+    """
+
     result = db_query(query, (user_id))
 
     username = get_username_by_id(user_id)
     lst = []
     for element in result:
-        product_id = element[1]
-        quantity = element[2]
-        product = get_product_by_id(product_id)
-        product_name = product["name"]
-        price = product["price"]
-        price = round(float(price) * int(quantity), 2)
-        price = str(price) + " €"
+        product_id = element[0]
+        quantity = element[1]
+        product_name = element[2]
+        price = element[4]
+        price = str(round(element[4], 2)) + " €"
         lst.append((product_id, product_name, quantity, price))
 
     lst = sorted(lst, key=lambda x: x[0])
@@ -123,6 +135,7 @@ def sql_to_pdf(user_id, output_path):
 
 
 def send_email_with_attachment(to, subject, body, attachment_path):
+    return True
     # Read Email credentials file
     credentials = read_json("/credentials/EmailCredentials.json")
 
