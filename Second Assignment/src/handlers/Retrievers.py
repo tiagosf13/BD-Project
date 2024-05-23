@@ -1,4 +1,5 @@
 import os
+from tkinter import SE
 from handlers.DataBaseCoordinator import db_query
 
 
@@ -15,10 +16,22 @@ def get_current_dir():
 
 
 
-def get_all_products():
+def get_all_products(search_term="", category="", min_price=0, max_price=100000, in_stock=True, sort_order="asc"):
+    in_stock = 1 if in_stock else 0
+    print("In stock:", in_stock)
     # Secure Query - Select specific columns
-    query = "SELECT product_id, product_name, product_description, price, category, stock, available FROM products"
-    results = db_query(query)
+    query = f"""
+        SELECT product_id, product_name, product_description, price, category, stock, available 
+        FROM products
+        WHERE product_name LIKE ? AND category LIKE ? AND price >= ? AND price <= ? AND available = ?
+        ORDER BY price {sort_order};
+    """
+    # Add wildcards for LIKE query
+    search_term = f"%{search_term}%"
+    category = f"%{category}%"
+    
+    # Execute the query with parameter substitution
+    results = db_query(query, (search_term, category, min_price, max_price, in_stock))
     
     # Fetch all rows in one go and convert to a list of dictionaries
     products = [{

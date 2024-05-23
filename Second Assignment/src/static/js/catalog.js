@@ -20,57 +20,50 @@ function displayProducts() {
     const selectedCategory = categoryFilter.value;
     // Get the product list container
     const productList = document.querySelector('.product-list');
-    
 
-    // Fetch products from Flask route
-    fetch('/products')
+
+    // Create a payload object to send to the server
+    const payload = {
+        searchTerm: searchTerm,
+        selectedCategory: selectedCategory,
+        minPrice: parseFloat(priceSlider.noUiSlider.get()[0]),
+        maxPrice: parseFloat(priceSlider.noUiSlider.get()[1]),
+        inStock: true,
+        sortOrder: sortOrderSelect.value
+    };
+
+    // Construct the query parameters
+    const queryParams = new URLSearchParams(payload).toString();
+    console.log(queryParams);
+
+    // Fetch the products based on the search term
+    fetch(`/products?${queryParams}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
         .then(response => response.json())
         .then(data => {
-            // Get the selected sort order
-            const sortOrder = sortOrderSelect.value;
-            
-            // Filter and sort products based on user input
-            const filteredProducts = data.filter(product => {
-                const matchesSearch = product.name.toLowerCase().includes(searchTerm) || product.id.toString().toLowerCase().includes(searchTerm);
-                const inStock = product.stock > 0;
-                const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-                const price = parseFloat(product.price);
-
-                // Check if the product price is within the selected range
-                const [minPrice, maxPrice] = priceSlider.noUiSlider.get();
-                const isWithinPriceRange = price >= parseFloat(minPrice) && price <= parseFloat(maxPrice);
-
-
-                return matchesSearch && matchesCategory && isWithinPriceRange && inStock;
-            });
-
-            // Sort the products based on the selected order
-            filteredProducts.sort((a, b) => {
-                if (sortOrder === 'asc') {
-                    return a.price - b.price;
-                } else if (sortOrder === 'desc') {
-                    return b.price - a.price;
-                }
-            });
 
             // Clear existing products
             productContainer.innerHTML = '';
 
-            filteredProducts.forEach(product => {
+            data.forEach(product => {
                 const productContainer = document.createElement('div');
                 productContainer.classList.add('product-container');
-            
+
                 const productCard = document.createElement('div');
                 productCard.classList.add('product-card');
-            
+
                 // Add a click event listener to the product card
                 productCard.addEventListener('click', () => redirectToProductPage(product.id));
-            
+
                 const imgElement = document.createElement('img');
                 imgElement.src = `/get_image/catalog/${product.id}.png`;
                 imgElement.alt = product.name;
                 productCard.appendChild(imgElement);
-            
+
                 productCard.innerHTML += `
                     <div class="product-content">
                         <h3>${product.name}</h3>
@@ -79,7 +72,7 @@ function displayProducts() {
                         <p class="price" style="color: green">${product.price} €</p>
                     </div>
                 `;
-            
+
                 const productButtonsContainer = document.createElement('div'); // Container for cart buttons
                 productButtonsContainer.classList.add('product-buttons-container');
 
@@ -90,7 +83,7 @@ function displayProducts() {
                 quantityInput.max = product.stock;
                 quantityInput.value = 1;
                 quantityInput.classList.add('quantity-input');
-            
+
                 const addToCartButton = document.createElement('button');
                 addToCartButton.innerHTML = '<i class="fas fa-cart-plus"></i>'; // Font Awesome icon for "Add to Cart"
                 addToCartButton.classList.add('cart-button');
@@ -103,7 +96,7 @@ function displayProducts() {
                     }
                     shoppingCart.addProduct(product);
                 });
-            
+
                 const removeItemButton = document.createElement('button');
                 removeItemButton.innerHTML = '<i class="fas fa-trash"></i>'; // Font Awesome icon for "Remove from Cart"
                 removeItemButton.classList.add('cart-button');
@@ -116,19 +109,19 @@ function displayProducts() {
                     }
                     shoppingCart.removeProduct(product);
                 });
-            
+
                 // Append the cart buttons to the container
                 productButtonsContainer.appendChild(quantityInput);
                 productButtonsContainer.appendChild(addToCartButton);
                 productButtonsContainer.appendChild(removeItemButton);
-            
+
                 // Append the product card and cart buttons container to the product container
                 productContainer.appendChild(productCard);
                 productContainer.appendChild(productButtonsContainer);
-            
+
                 // Append the product container to the product list
                 productList.appendChild(productContainer);
-            });                                  
+            });
         })
         .catch(error => {
             console.error('Error fetching products:', error);
