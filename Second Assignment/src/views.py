@@ -2,7 +2,7 @@ from math import prod
 import os, tempfile
 from handlers.extensions import bcrypt
 from handlers.UserManagement import send_password_reset_email
-from flask import Blueprint, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
+from flask import Blueprint, flash, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
 from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
 from handlers.UserManagement import update_username, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
 from handlers.UserManagement import get_user_role, compose_email_body, update_password, generate_reset_token, set_reset_token_for_user
@@ -35,14 +35,20 @@ def login():
         password = request.form.get("password")
 
         if is_valid_input([username]) == False:
+            flash("Invalid username.")
             return render_template("login.html", message="Invalid username.")
 
         user = search_user("username", username, "user_id, hashed_password")
+
+        if user is None:
+            flash("User not found!")
+            return render_template("login.html", message="User not found!")
 
         if user["user_id"] and bcrypt.check_password_hash(user["hashed_password"], password):
             return redirect(url_for("views.verify_totp_login", id=user["user_id"]))
 
         # Password is incorrect
+        flash("Invalid login credentials.")
         return render_template("login.html", message="Invalid login credentials.")
     
     else:

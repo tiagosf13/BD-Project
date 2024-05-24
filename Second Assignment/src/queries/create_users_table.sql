@@ -16,6 +16,20 @@ BEGIN
         admin_role BIT NOT NULL,
         PRIMARY KEY (user_id),
     );
+
+    -- Null User -> To be used when an account gets deleted
+    INSERT INTO users
+    VALUES (
+        -1,                 -- ID
+        '[DELETED USER]',   -- username
+        'null',             -- hashed_password
+         null,              -- password_reset_token
+         null,              -- password_reset_token_timestamp
+        'null',             -- email
+        'null',             -- totp_secret_key
+        '1970-01-01',       -- totp_secret_key_timestamp
+        0                   -- admin_role
+    )
 END
 
 -- Path: src/queries/create_carts_table.sql

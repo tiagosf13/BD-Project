@@ -47,7 +47,8 @@ def db_query(query, params=None):
     conn = pyodbc.connect(
         Driver='{SQL Server}',
         Server=credentials["host"],
-        Database=credentials["dbname"]
+        Database=credentials["dbname"],
+        trusted_connection='yes',
     )
 
     # Initiate the cursor
