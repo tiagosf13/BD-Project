@@ -1,8 +1,6 @@
-
-
 CREATE TRIGGER insertReview on REVIEWS
 INSTEAD OF INSERT
 AS
 BEGIN
-
+    
 END
