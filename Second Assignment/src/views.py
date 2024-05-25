@@ -121,8 +121,8 @@ def verify_totp_signup():
 
     secret_key = session.get("secret_key")
 
-    # Verify the TOTP code
-    if verify_totp_code(inserted_totp, secret_key):
+    # Verify the TOTP code // TODO REMOVIDO NECESSIDADE DE TER OTP (apagar or True)
+    if verify_totp_code(inserted_totp, secret_key) or True:
 
         username = session.get("signup_username")
         email = session.get("signup_email")
@@ -213,7 +213,7 @@ def verify_totp_login(id):
 
     if request.method == "GET":
         return render_template("totp_login.html", id=id)
-    else:
+    else:   
         username = search_user("user_id", id, "username")["username"]
 
         token = int(request.get_json().get("token")) if request.is_json else None
@@ -229,11 +229,12 @@ def verify_totp_login(id):
                                 emergency_codes != None and \
                                 (token in emergency_codes and emergency_codes[token] == True)
         
+        # TODO deactivated need for inserting totp code
         # Verify the TOTP code
-        if preconditions_check:
-            remove_valid_emergency_code(id, token)
-        elif not verify_totp_code(str(token), secret_key):
-            return jsonify({'error': 'Invalid TOTP code. Please try again.'}), 500
+        # if preconditions_check:
+        #     remove_valid_emergency_code(id, token)
+        # elif not verify_totp_code(str(token), secret_key):
+        #     return jsonify({'error': 'Invalid TOTP code. Please try again.'}), 500
         
         # Set session variables
         session["username"] = username

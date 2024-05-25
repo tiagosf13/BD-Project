@@ -252,7 +252,7 @@ def create_user(username, password, email, secret_key, secret_key_timestamp):
     query_insert = "INSERT INTO users (user_id, username, hashed_password, email, totp_secret_key, totp_secret_key_timestamp, admin_role) VALUES (?, ?, ?, ?, ?, ?, ?);"
 
     # Execute the insertion query
-    id = db_query(query_insert, (id, username, password, email, secret_key, secret_key_timestamp, False))[0][0]
+    db_query(query_insert, (id, username, password, email, secret_key, secret_key_timestamp, False))
 
     # Create a folder for the user
     ans = create_user_folder(id)

@@ -9,6 +9,7 @@ const gatherAndSendOTP = () => {
         }
     });
     
+    
     fetch(`/verify_totp_login/${id}`, {
         method: 'POST',
         headers: {
