@@ -47,7 +47,8 @@ def db_query(query, params=None):
     conn = pyodbc.connect(
         Driver='{SQL Server}',
         Server=credentials["host"],
-        Database=credentials["dbname"]
+        Database=credentials["dbname"],
+        trusted_connection='yes',
     )
 
     # Initiate the cursor
@@ -109,3 +110,17 @@ def check_database_tables_exist():
     db_query(create_table_reviews)
     db_query(create_table_orders)
     db_query(create_table_products_ordered)
+
+def activate_triggers():
+    directory = get_current_dir() + "/queries/Triggers";
+
+    for triggerFile in os.listdir(directory):
+        # Delete previous Trigger
+        db_query("DROP TRIGGER IF EXISTS " + triggerFile.rstrip('.sql'))
+        # Create trigger
+        db_query(read_sql_file("/queries/Triggers/" + triggerFile))
+
+def populate_db(populate):
+    if (not populate):
+        return
+    db_query(read_sql_file("/queries/InitialTestData/populateDB.sql"));

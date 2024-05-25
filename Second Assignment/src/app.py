@@ -1,6 +1,6 @@
 from views import views
 from handlers.extensions import bcrypt
-from handlers.DataBaseCoordinator import check_database_tables_exist
+from handlers.DataBaseCoordinator import check_database_tables_exist, activate_triggers, populate_db
 from flask import Flask, render_template
 
 
@@ -12,6 +12,9 @@ bcrypt.init_app(app)
 
 # Check if the database tables exist
 check_database_tables_exist()
+activate_triggers()
+# Put True if needed to populate db else keep false
+populate_db(populate=False)
 
 # Define a custom error handler for 403 (Not Found) errors
 @app.errorhandler(403)

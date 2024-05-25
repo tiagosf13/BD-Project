@@ -44,17 +44,26 @@
                         <span class="login100-form-title p-b-49">
                             Login
                         </span>
-    
+                        
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                <span style="color:red">{{ message }}</span>
+                                {% endfor %}
+                            {% endif %}  
+                        {% endwith %}
+                        
                         <div class="wrap-input100 validate-input m-b-23" data-validate = "Username is required">
                             <span class="label-input100">Username</span>
                             <input class="input100" name="username" placeholder="Type your username or Email" required oninput="validateLowercase(this)">
+                            
                         </div>
                         
                         <div class="wrap-input100 validate-input" data-validate="Password is required">
                             <span class="label-input100">Password</span>
                             <input class="input100" type="password" name="password" placeholder="Type your password" required>
+                            
                         </div>
-                        
                         <div class="text-center p-t-10 p-b-31">
                             <a href="reset-password" style="color: rgba(52,53,65);">
                                 Forgot password?
