@@ -4,7 +4,7 @@ from handlers.extensions import bcrypt
 from handlers.UserManagement import send_password_reset_email
 from flask import Blueprint, flash, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
 from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
-from handlers.UserManagement import update_username, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
+from handlers.UserManagement import check_user_bought_product, update_username, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
 from handlers.UserManagement import get_user_role, compose_email_body, update_password, generate_reset_token, set_reset_token_for_user
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
 from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
@@ -632,6 +632,7 @@ def add_review(product_id):
     preconditions_check = is_valid_input([product_id, review]) and \
                             verify_id_exists(product_id, "products") and \
                             check_product_availability(product_id) and \
+                            check_user_bought_product(user_id, product_id) and \
                             rating != None
     
     if preconditions_check:
@@ -640,7 +641,7 @@ def add_review(product_id):
         # Return a JSON response with the correct content type
         return jsonify({'message': 'Review added successfully', "username": username}), 200
     else:
-        return jsonify({'error': 'Invalid review.'}), 500
+        return jsonify({'message': 'Something went wrong, you may not have bought this product!'}), 400
 
 
 @views.route('/add_item_cart/<int:product_id>', methods=['POST'])
@@ -822,7 +823,7 @@ def orders(id):
     
     userOrders = get_orders_by_user_id(id)
 
-    if orders == None:
+    if userOrders == None:
         return render_template('orders.html', userOrders={})
 
     return render_template('orders.html', userOrders=userOrders)

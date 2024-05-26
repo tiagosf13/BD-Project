@@ -11,9 +11,9 @@ SELECT u.user_id,
             r.review_text
         FROM 
             users u
-        INNER JOIN 
+        LEFT OUTER JOIN 
             orders o ON u.user_id = o.user_id
-        INNER JOIN
+        LEFT OUTER JOIN
             products_ordered po ON  po.order_id = o.order_id
-        INNER JOIN 
+        LEFT OUTER JOIN 
             reviews r ON u.user_id = r.user_id

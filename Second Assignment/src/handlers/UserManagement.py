@@ -1,3 +1,4 @@
+from http.client import PRECONDITION_FAILED
 import os, random, shutil, secrets, string, requests, hashlib, pandas as pd
 from flask import render_template_string
 from string import ascii_uppercase, ascii_lowercase
@@ -392,26 +393,45 @@ def get_orders_by_user_id(id):
     return orders
 
 
+def check_user_bought_product(user_id, product_id):
+    # Construct the SQL query to check if the user bought the product
+    # Secure Query
+    query = """
+        SELECT products_ordered.order_id 
+        FROM products_ordered 
+            JOIN orders ON products_ordered.order_id = orders.order_id
+        WHERE orders.user_id = ? AND products_ordered.product_id = ?;
+    """
+    result = db_query(query, (user_id, product_id))
+
+    return True if result else False
+
+
 def get_user_data_by_id(id):
     info = {}
-
+    print("User ID: ", id)
     # Construct the SQL query to retrieve user's info, orders, and reviews
     ## Transformado numa view
     query = """
         SELECT *
         FROM CompleteUserData
-        WHERE user_id = ?
+        WHERE user_id = ?;
     """
-    query_results = db_query(query, (id))
+    query_results = db_query(query, (id,))
+    print(query_results)
 
     if query_results:
         for row in query_results:
             if 'personal_info' not in info:
                 info['personal_info'] = [{"User ID": row[0], "Username": row[1], "E-mail": row[2]}]
-            if 'orders' not in info:
+            if 'orders' not in info and row[3] != None:
                 info['orders'] = [{"Order ID": row[3], "Product": get_product_by_id(row[4])["name"], "Product ID": row[4], "Quantity": row[5], "Address": row[6], "Date": row[7]}]
-            if 'reviews' not in info:
+            if 'reviews' not in info and row[4] != None:
                 info['reviews'] = [{"Product ID": row[4], "Rating": row[8], "Review": row[9]}]
+    else:
+        info = {}
+        
+    print("Info:", info)
 
     return info
 
