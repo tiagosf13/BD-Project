@@ -30,7 +30,6 @@ def index():
 # This route is used to perform the login
 @views.route('/login/', methods=['GET','POST'])
 def login():
-    print("ola")
     if request.method == "POST":
         username = request.form.get("username").lower()
         password = request.form.get("password")
@@ -316,7 +315,6 @@ def profile(username):
 @views.route("/delete_account", methods=['POST'])
 def deleteAccount():
     userID = session.get("id")
-    print("Deleting account and data from user : " + userID)
     db_query("EXEC deleteUser ?", (userID))
     # Clear the session variables
     session.clear()
@@ -371,64 +369,63 @@ def update_account(id):
     if id == None and session.get("id") == None:
         return redirect(url_for("views.login"))
     
-    #try:
+    try:
     
-    if os.name == "nt":
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
-    else:
-        # Get the current working directory
-        current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
+        if os.name == "nt":
+            # Get the current working directory
+            current_directory = os.path.dirname(os.path.abspath(__file__)).split("\\handlers")[0]
+        else:
+            # Get the current working directory
+            current_directory = os.path.dirname(os.path.abspath(__file__)).split("/handlers")[0]
             
-    accounts_directory = os.path.join(current_directory, "database", "accounts")
-    os.makedirs(accounts_directory, exist_ok=True)  # Ensure the directory exists
+        accounts_directory = os.path.join(current_directory, "database", "accounts")
+        os.makedirs(accounts_directory, exist_ok=True)  # Ensure the directory exists
 
-    file_path = os.path.join(accounts_directory, f"{id}.png").replace("\\", "/")
+        file_path = os.path.join(accounts_directory, f"{id}.png").replace("\\", "/")
 
-    # Get the new uploaded user's account image
-    profile_photo = request.files.get("profile_photo")
+        # Get the new uploaded user's account image
+        profile_photo = request.files.get("profile_photo")
 
-    # If there is an image and the size is less than 5MB
-    if profile_photo and not profile_photo.content_length > 5120 * 5120:
-        # Save the image to the user's account
-        profile_photo.save(file_path)
+        # If there is an image and the size is less than 5MB
+        if profile_photo and not profile_photo.content_length > 5120 * 5120:
+            # Save the image to the user's account
+            profile_photo.save(file_path)
 
-    # Get the username, email, and password from the user's session
-    username = request.form.get("username")
-    email = request.form.get("email")
-    password = request.form.get("psw")
-    old_password = request.form.get("psw-old")
+        # Get the username, email, and password from the user's session
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("psw")
+        old_password = request.form.get("psw-old")
 
-    preconditions_check = is_valid_input([username, email, password, old_password]) and \
-                            not check_username_exists(username) and \
-                            not check_email_exists(email)  and \
-                            id != None and \
-                            bcrypt.check_password_hash(search_user("user_id", id, "hashed_password")["hashed_password"], old_password)
+        preconditions_check = is_valid_input([username, email, password, old_password]) and \
+                                not check_username_exists(username) and \
+                                not check_email_exists(email)  and \
+                                id != None and \
+                                bcrypt.check_password_hash(search_user("user_id", id, "hashed_password")["hashed_password"], old_password)
     
-    if preconditions_check:
-        # Check if the username field wasn't empty and occupied by another user
-        if username != "":
-            print("Updating username")
-            # Update the username
-            update_username(id, username)
-            # Set the session's username
-            session["username"] = username
-        # Check if the email field wasn't empty and occupied by another user
-        if email != "":
-            # Update the email
-            update_email(id, email)
-        # Check if the password wasn't empty
-        if password != "":
-            # Update the password
-            # Hash the password before storing it in the database
-            update_password(id, bcrypt.generate_password_hash(password).decode("utf-8"))
-        # Return the profile page
-        return redirect(url_for("views.catalog", id=id))
-    else:
-        return jsonify({'error': 'Invalid input.'}), 500
-#except Exception as e:
-    #   print(e)
-    #  return jsonify({'error': "Internal Server Error"}), 500
+        if preconditions_check:
+            # Check if the username field wasn't empty and occupied by another user
+            if username != "":
+                # Update the username
+                update_username(id, username)
+                # Set the session's username
+                session["username"] = username
+            # Check if the email field wasn't empty and occupied by another user
+            if email != "":
+                # Update the email
+                update_email(id, email)
+            # Check if the password wasn't empty
+            if password != "":
+                # Update the password
+                # Hash the password before storing it in the database
+                update_password(id, bcrypt.generate_password_hash(password).decode("utf-8"))
+            # Return the profile page
+            return redirect(url_for("views.catalog", id=id))
+        else:
+            return jsonify({'error': 'Invalid input.'}), 500
+    except Exception as e:
+        print(e)
+        return jsonify({'error': "Internal Server Error"}), 500
 
 
 # This view is used to get a image
@@ -478,9 +475,6 @@ def products():
         selected_category = ""
 
     products = get_all_products(search_term, selected_category, min_price, max_price, in_stock, sort_order)
-    
-    for product in products:
-        print('\n', product)
 
     return jsonify(products)
 
@@ -828,7 +822,6 @@ def orders(id):
     
     userOrders = get_orders_by_user_id(id)
 
-    print(userOrders)
     if orders == None:
         return render_template('orders.html', userOrders={})
 
@@ -852,7 +845,6 @@ def get_user_data(id):
 @views.route('/verify-password', methods=['POST'])
 def verify_password():
     data = request.get_json()
-    print(data)
     password = data.get('password')
 
     if not password:
