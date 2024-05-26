@@ -12,7 +12,7 @@ from handlers.ProductManagement import update_product_description, check_product
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
 from handlers.DataBaseCoordinator import db_query, get_current_dir
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
-from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email
+from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email, get_monthly_sales
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
 from handlers.TOTPHandler import generate_totp_atributes, verify_totp_code, generate_emergency_codes
 
@@ -24,6 +24,8 @@ views = Blueprint('views', __name__)
 # This route is used to serve the index page
 @views.route('/', methods=['GET'])
 def index():
+    if session.get('id') != None:
+        return redirect(url_for("views.catalog", id=session.get('id')))
     return render_template('index.html')
 
 
@@ -447,7 +449,11 @@ def get_image(filename):
 
 @views.route('/catalog/<id>', methods=['GET'])
 def catalog(id):
-    if id == None or session.get("id") == None or is_valid_input([id]) == False:
+    # mantido id nos argumentos para manter compatibilidade com as paginas antigas
+    # Mas valor é ignorado porque havia exploit
+    # de ir para a pagina de administrador sem ser admin
+    id = session.get("id")
+    if id == None:
         return redirect(url_for("views.login"))
 
     # Get the username and id from the session
@@ -458,6 +464,18 @@ def catalog(id):
     else:
         # Return the catalog page
         return render_template("catalog.html", username=user["username"], id=id, admin=False)
+
+@views.route('/statistics/', methods=['GET'])
+def statistics():
+    id = session.get('id')
+    user = search_user("user_id", id, "username, admin_role")
+
+    if (id is None or user["admin_role"] != True):
+        return redirect(url_for("app.page_not_found"))
+    
+    sales = get_monthly_sales()
+    return render_template("statistics.html", username=user["username"], id=id, admin=True, sales=sales)
+
 
 
 @views.route('/products/', methods=['GET'])

@@ -5,16 +5,16 @@
 --      Returns table with overall sales divided monthly
 CREATE FUNCTION getMonthlySalesTable(@month int = null, @year int = null)
 RETURNS @monthlySales TABLE (
-    month       int,
     year        int,
-    totalSales  int
+    month       int,
+    total_sales  DECIMAL(10,2)
 )
 AS
 BEGIN
     IF (@month is not null AND @year is not null)
     BEGIN
         INSERT INTO @monthlySales
-        SELECT year, month, sum(total_price)
+        SELECT year, month, sum(total_price) as total_sales
         FROM (
             SELECT order_id,
                     YEAR(order_date) as year,
@@ -29,7 +29,7 @@ BEGIN
     ELSE
     BEGIN
         INSERT INTO @monthlySales
-        SELECT year, month, sum(total_price)
+        SELECT year, month, sum(total_price) as total_sales
         FROM (
             SELECT order_id,
                     YEAR(order_date) as year,
