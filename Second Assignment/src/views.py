@@ -28,8 +28,9 @@ def index():
 
 
 # This route is used to perform the login
-@views.route('/login', methods=['GET','POST'])
+@views.route('/login/', methods=['GET','POST'])
 def login():
+    print("ola")
     if request.method == "POST":
         username = request.form.get("username").lower()
         password = request.form.get("password")
@@ -55,7 +56,7 @@ def login():
         return render_template("login.html")
 
 
-@views.route('/logout', methods=['GET'])
+@views.route('/logout/', methods=['GET'])
 def logout():
 
     # Clear the session variables
@@ -66,7 +67,7 @@ def logout():
 
 
 # This view is used to enroll new users into the platform
-@views.route("/signup", methods=["GET", "POST"])
+@views.route("/signup/", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
         username = request.form.get("username").lower()
@@ -477,6 +478,9 @@ def products():
         selected_category = ""
 
     products = get_all_products(search_term, selected_category, min_price, max_price, in_stock, sort_order)
+    
+    for product in products:
+        print('\n', product)
 
     return jsonify(products)
 

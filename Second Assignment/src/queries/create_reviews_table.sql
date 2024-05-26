@@ -9,7 +9,7 @@ BEGIN
         product_id INT NOT NULL,
         user_id INT NOT NULL,
         review_text VARCHAR(255) NOT NULL,
-        rating INT NOT NULL,
+        rating DECIMAL(2,1) NOT NULL,
         review_date DATE NOT NULL,
         PRIMARY KEY (review_id),
         FOREIGN KEY (product_id) REFERENCES products(product_id),
