@@ -59,19 +59,27 @@ def verify_product_id_exists(id):
 def get_product_by_id(id):
     # Secure Query
     query = """
-        SELECT products.product_id, product_name, product_description, price, category, stock, available, average_rating
+        SELECT 
+            products.product_id, 
+            product_name, 
+            product_description, 
+            price, 
+            category, 
+            stock, 
+            available, 
+            COALESCE(average_rating, 5.0) AS average_rating
         FROM products
-	        JOIN (
-		        SELECT
-			        products.product_id,
-			        CAST(ROUND(AVG(reviews.rating), 2) AS DECIMAL(10, 1)) AS average_rating
-		        FROM products
-			        RIGHT JOIN reviews ON reviews.product_id = products.product_id
-		        WHERE products.product_id=?
-		        GROUP BY products.product_id) AS products_rating ON products.product_id=products_rating.product_id
+        LEFT JOIN (
+            SELECT
+                products.product_id,
+                CAST(ROUND(AVG(reviews.rating), 2) AS DECIMAL(10, 1)) AS average_rating
+            FROM products
+            LEFT JOIN reviews ON reviews.product_id = products.product_id
+            GROUP BY products.product_id
+        ) AS products_rating ON products.product_id = products_rating.product_id
         WHERE products.product_id = ?;
     """
-    results = db_query(query, (id, id))
+    results = db_query(query, (id))
 
 
     if len(results) == 0:
