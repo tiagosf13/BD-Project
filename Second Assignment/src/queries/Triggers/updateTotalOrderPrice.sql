@@ -11,5 +11,5 @@ BEGIN
             FROM Products_ordered po 
 			INNER JOIN Products p ON po.Product_Id = p.Product_Id
             WHERE po.Order_id = @orderid
-    ) WHERE Order_id = @orderid;
+    ) WHERE order_id = @orderid;
 END

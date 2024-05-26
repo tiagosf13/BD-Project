@@ -127,16 +127,20 @@ select {
 .product-container {
     display: flex;
     justify-content: center;
-    align-items: center;
+    flex-direction: row;
+    width: 100%;
     margin-top: 20px; /* Optional: Add some top margin for separation from header */
 }
 
 .product-list {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* Display 5 products in each row */
-    grid-gap: 20px;
-    padding: 20px;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    row-gap: 10px;
+    column-gap: 10px;
     justify-content: center; /* Center the products horizontally within each row */
+    align-items: stretch;
 }
 
 .product-card {
@@ -318,4 +322,9 @@ button[type="submit"]:hover {
     right: 10px;
     font-size: 20px;
     cursor: pointer;
+}
+
+.row {
+    width: 100%;
+    padding: 5px 10px;
 }

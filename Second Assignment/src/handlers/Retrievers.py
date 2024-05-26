@@ -171,3 +171,17 @@ def get_user_email(id):
         return None
     else:
         return results[0][0]
+    
+
+
+def get_monthly_sales(year: int = None,
+                      month: int = None):
+    rows = db_query("SELECT * FROM getMonthlySalesTable(?, ?)", (year, month))
+
+    sales = {}
+    for row in rows:
+        year = row[0]
+        month = row[1]
+        total_sales = row[2];
+        sales[f"{year}-{month:02d}"] = total_sales;
+    return sales
