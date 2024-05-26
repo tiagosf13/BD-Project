@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW CompleteUserData AS
+CREATE VIEW CompleteUserData AS
 SELECT u.user_id, 
             u.username, 
             u.email, 
