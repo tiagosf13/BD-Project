@@ -31,8 +31,8 @@ def get_all_products(search_term="", category="", min_price=0, max_price=100000,
     category = f"%{category}%"
     
     # Execute the query with parameter substitution
-    results = db_query(query, (search_term, category, min_price, max_price, in_stock))
-    
+    # results = db_query(query, (search_term, category, min_price, max_price, in_stock))
+    results = db_query("SELECT * FROM PRODUCTS")
     # Fetch all rows in one go and convert to a list of dictionaries
     products = [{
         "id": row[0],

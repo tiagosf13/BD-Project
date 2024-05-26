@@ -29,7 +29,7 @@ function validateForm() {
     var username = document.getElementById("username").value;
     var usernameExists = false;  // flag to indicate whether username exists
     var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             var response = JSON.parse(this.responseText);
             if (response.exists) {
@@ -45,12 +45,12 @@ function validateForm() {
     if (usernameExists) {
         return false;  // don't submit form if username exists
     }
-    
+
 
     var email = document.getElementById("email").value;
     var emailExists = false;  // flag to indicate whether username exists
     var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
             var response = JSON.parse(this.responseText);
             if (response.exists) {
@@ -66,7 +66,7 @@ function validateForm() {
     if (emailExists) {
         return false;  // don't submit form if username exists
     }
-    
+
     return true;  // submit form if username doesn't exist
 }
 
@@ -86,49 +86,49 @@ function checkPasswordCriteria() {
         },
         body: JSON.stringify({ password: confirm_password })
     })
-    .then(response => response.json())
-    .then(data => {
-        const breached = data.breached;
+        .then(response => response.json())
+        .then(data => {
+            const breached = data.breached;
 
-        // Remove leading and trailing spaces, and replace consecutive spaces with a single space
-        const processedPassword = password.trim().replace(/\s+/g, ' ');
-        const combinedPasswordLength = processedPassword.length;
+            // Remove leading and trailing spaces, and replace consecutive spaces with a single space
+            const processedPassword = password.trim().replace(/\s+/g, ' ');
+            const combinedPasswordLength = processedPassword.length;
 
-        let criteria = {
-            length: combinedPasswordLength >= 12 && combinedPasswordLength <= 128,
-            uppercase: /[A-Z]/u.test(password),
-            lowercase: /[a-z]/u.test(password),
-            digit: /[0-9]/.test(password),
-            special: /[\s\S]/u.test(password),
-            match: confirm_password !== "" && password === confirm_password,
-            breach_check: !breached
-        };
+            let criteria = {
+                length: combinedPasswordLength >= 12 && combinedPasswordLength <= 128,
+                uppercase: /[A-Z]/u.test(password),
+                lowercase: /[a-z]/u.test(password),
+                digit: /[0-9]/.test(password),
+                special: /[\s\S]/u.test(password),
+                match: confirm_password !== "" && password === confirm_password,
+                breach_check: !breached
+            };
 
-        // Update the UI to reflect satisfied/unsatisfied criteria
-        for (let criterion in criteria) {
-            const criteriaElement = document.getElementById(`criteria-${criterion}`);
-            if (criteria[criterion]) {
-                criteriaElement.classList.add('satisfied');
-            } else {
-                criteriaElement.classList.remove('satisfied');
+            // Update the UI to reflect satisfied/unsatisfied criteria
+            for (let criterion in criteria) {
+                const criteriaElement = document.getElementById(`criteria-${criterion}`);
+                if (criteria[criterion]) {
+                    criteriaElement.classList.add('satisfied');
+                } else {
+                    criteriaElement.classList.remove('satisfied');
+                }
             }
-        }
 
-        // Check if all criteria are met
-        const allCriteriaMet = Object.values(criteria).every(criterion => criterion);
+            // Check if all criteria are met
+            const allCriteriaMet = Object.values(criteria).every(criterion => criterion);
 
-        // Enable/disable sign-up button based on criteria
-        const signUpButton = document.getElementById('savebtn');
-        if (allCriteriaMet) {
-            signUpButton.removeAttribute('disabled');
-        } else {
-            signUpButton.setAttribute('disabled', true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        // Handle errors if any
-    });
+            // Enable/disable sign-up button based on criteria
+            const signUpButton = document.getElementById('savebtn');
+            if (allCriteriaMet) {
+                signUpButton.removeAttribute('disabled');
+            } else {
+                signUpButton.setAttribute('disabled', true);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Handle errors if any
+        });
 }
 
 
@@ -161,4 +161,21 @@ function generateEmergencyCodes() {
     // Open a pop-up window to display the table of new codes
     const popup = window.open('', '_blank', 'width=600,height=400');
     popup.document.write(tableContent);
+}
+
+// JavaScript to handle the logout button click
+function deleteAccount() {
+    fetch('/delete_account', {
+        method: 'POST',
+        credentials: 'same-origin',  // Include cookies in the request
+    })
+        .then(response => {
+            if (response.ok) {
+                // Redirect to the login or home page after successful logout
+                window.location.href = '/';  // Replace with your actual login or home page URL
+            }
+        })
+        .catch(error => {
+            alert('Error deleting account! error:\n', error);
+        });
 }

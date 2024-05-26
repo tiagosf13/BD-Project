@@ -126,3 +126,49 @@ input:valid {
     border-radius: 4px;
     margin-bottom: 10px;
 }
+
+
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: #474e5d;
+    padding-top: 50px;
+}
+
+/* Modal Content/Box */
+.modalContent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: beige;
+    margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+    border: 1px solid #888;
+    width: 60%; /* Could be more or less, depending on screen size */
+    color: black;
+    padding: 30px 0px;
+} .modalRow > * {
+    margin: 10px 0px;
+}
+.modalContent > p {
+    color: #222
+}
+
+.rowOptionButtons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.close {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+}

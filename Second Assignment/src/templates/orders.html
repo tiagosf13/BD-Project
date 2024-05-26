@@ -16,36 +16,50 @@
     </div>
 
     <div class="container mt-5">
-        <table class="table table-striped" id="productTable">
-            <thead>
-                <tr>
-                    <th data-column="image">Image</th> <!-- New column for product images -->
-                    <th data-column="id">Order ID</th>
-                    <th data-column="id">Product ID</th>
-                    <th data-column="name">Name</th>
-                    <th data-column="description">Quantity</th>
-                    <th data-column="price">Price (€)</th>
-                    <th data-column="category">Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                    <tr>
-                        <td><img src="{{ url_for('views.get_image', filename='catalog/' + product.product_id|string + '.png') }}" width="50"></td>
-                        <td>{{ product.order_id }}</td>
-                        <td>{{ product.product_id }}</td>
-                        <td>{{ product.name }}</td>
-                        <td>{{ product.quantity }}</td>
-                        <td>{{ product.price }} €</td>
-                        <td>{{ product.date }}</td>
-                        {% if product.product_available == 1 %}
-                            <td><i class="fas fa-cart-plus reorderButton cart-button" data-product='{{ product|tojson|safe }}' id="reorderButton"></i></td>
-                        {% endif %}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="shopping-cart">
+        {% for order_id, products in userOrders.items() %}
+            <button class="accordion mt-3">
+                <span style="display:flex; flex-direction: column">
+                    <strong>
+                        Order {{order_id}}
+                    </strong>
+                    <span style="color:slategray">
+                        Order made on [{{products[0].order_date}}]
+                    </span>
+                </span>
+                <strong style="float: right">
+                    Total = {{products[0].total_price}} €
+                </strong>
+            </button>
+            <div class="panel">
+                <table class="table">
+                    {% for product in products %}
+                        <tr>
+                            <td><img src="{{ url_for('views.get_image', filename='catalog/' + product.product_id|string + '.png') }}" width="50"></td>
+                            <td style="display:flex; flex-direction: column;">
+                                <a href="/product/{{product.product_id}}">{{ product.name }} ( {{ product.product_id }} ) </a>
+                                <span style="color:slategrey">category: {{ product.category }}</span>
+                            </td>
+                            <td>
+                                {{ product.quantity }} &times;
+                                {{ product.price }} €
+                                = {{product.quantity * product.price}} €
+                            </td>
+                            <td>
+                                <div class="buttonColumn">
+                                    {% if product.product_available == 1 %}
+                                        <i class="fas fa-cart-plus reorderButton cart-button" data-product='{{ product|tojson|safe }}' id="reorderButton"></i>
+                                    {% endif %}
+                                    {% if product.reviewed == 0 %}
+                                        <a class="reviewButton" href="/product/{{product.product_id}}">Rate Product</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% endfor %}
+        <div class="shopping-cart" style="display: none">
             <h2>Shopping Cart</h2>
             <ul id="cartList">
                 <!-- Cart items will be displayed here -->

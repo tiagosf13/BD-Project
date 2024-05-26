@@ -45,7 +45,6 @@ function displayProducts() {
     })
         .then(response => response.json())
         .then(data => {
-
             // Clear existing products
             productContainer.innerHTML = '';
 
@@ -67,9 +66,9 @@ function displayProducts() {
                 productCard.innerHTML += `
                     <div class="product-content">
                         <h3>${product.name}</h3>
-                        <p class="product-description">${product.description}</p>
                         <p style="color: red">ID: ${product.id}</p>
                         <p class="price" style="color: green">${product.price} €</p>
+                        <p class="product-description">${product.description}</p>
                     </div>
                 `;
 
@@ -116,11 +115,11 @@ function displayProducts() {
                 productButtonsContainer.appendChild(removeItemButton);
 
                 // Append the product card and cart buttons container to the product container
-                productContainer.appendChild(productCard);
-                productContainer.appendChild(productButtonsContainer);
+                // productContainer.appendChild(productCard);
+                productCard.appendChild(productButtonsContainer);
 
                 // Append the product container to the product list
-                productList.appendChild(productContainer);
+                productList.appendChild(productCard);
             });
         })
         .catch(error => {

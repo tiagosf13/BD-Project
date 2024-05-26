@@ -70,10 +70,10 @@ def db_query(query, params=None):
 
     # Check if the query has SELECT
     if ("SELECT" in query or "OUTPUT" in query) and not "CREATE" in query:
-
         # Fetch all the data
         data = cur.fetchall()
         select_in_query = True
+
 
     # Commit the connection
     conn.commit()
@@ -91,7 +91,7 @@ def db_query(query, params=None):
         return data
 
 
-def check_database_tables_exist():
+def check_database_tables_exist(populateTables = False):
     
     # Read the SQL files for creating the tables
     create_table_users = read_sql_file("/queries/create_users_table.sql")
@@ -111,16 +111,33 @@ def check_database_tables_exist():
     db_query(create_table_orders)
     db_query(create_table_products_ordered)
 
-def activate_triggers():
+
+    load_functions()
+
+    if (populateTables):
+        db_query(read_sql_file("/queries/InitialTestData/populateDB.sql"));
+
+def load_functions():
+    # Load triggers
     directory = get_current_dir() + "/queries/Triggers";
-
-    for triggerFile in os.listdir(directory):
+    for file in os.listdir(directory):
         # Delete previous Trigger
-        db_query("DROP TRIGGER IF EXISTS " + triggerFile.rstrip('.sql'))
+        db_query("DROP TRIGGER IF EXISTS " + file.removesuffix('.sql'))
         # Create trigger
-        db_query(read_sql_file("/queries/Triggers/" + triggerFile))
+        db_query(read_sql_file("/queries/Triggers/" + file))
 
-def populate_db(populate):
-    if (not populate):
-        return
-    db_query(read_sql_file("/queries/InitialTestData/populateDB.sql"));
+    # Load UDF's
+    directory = get_current_dir() + "/queries/UDF";
+    for file in os.listdir(directory):
+        # Delete previous UDF
+        db_query("DROP FUNCTION IF EXISTS " + file.removesuffix('.sql'))
+        # Create UDF
+        db_query(read_sql_file("/queries/UDF/" + file))
+
+    # Load Procedures's
+    directory = get_current_dir() + "/queries/PROC";
+    for file in os.listdir(directory):
+        # Delete previous procedures
+        db_query("DROP PROCEDURE IF EXISTS " + file.removesuffix('.sql'))
+        # Create procedure
+        db_query(read_sql_file("/queries/PROC/" + file))

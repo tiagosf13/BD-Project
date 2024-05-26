@@ -351,46 +351,45 @@ def calculate_total_price(products):
 
 def get_orders_by_user_id(id):
 
-    query = "SELECT orders.order_id, product_id, shipping_address, order_date, quantity FROM orders \
-            LEFT JOIN products_ordered ON orders.order_id = products_ordered.order_id \
-            WHERE orders.user_id = ?;"
+    # query = "SELECT orders.order_id, product_id, shipping_address, order_date, quantity FROM orders \
+    #         LEFT JOIN products_ordered ON orders.order_id = products_ordered.order_id \
+    #         WHERE orders.user_id = ?;"
+    query = "SELECT * from getUserOrders(?)"
     results = db_query(query, (id))
 
     # Check if the user has any orders
     if not results:
         return None
 
-    products = []
-    product = {}
+    orders = {}
     for row in results:
         order_id = row[0]
-        product_id = row[1]
-        order_address = row[2]
-        order_date = row[3]
-        quantity = row[4]
-
-        # Remove milliseconds part from the string
-        order_date_str_without_ms = order_date.split('.')[0]
-
-        # Convert the string to a datetime object
-        order_date = datetime.strptime(order_date_str_without_ms, "%Y-%m-%d %H:%M:%S")
-
-        # Get product information by id
-        product__ = get_product_by_id(product_id)
+        order_date = row[1]
+        product_id = row[2]
+        product_name = row[3]
+        category = row[4]
+        price = row[5]
+        quantity = row[6]
+        total_price = row[7]
+        available = row[8]
+        reviewed = row[9]
 
         product = {
-                    "order_id" : order_id,
+                    "order_date": order_date,
                     "product_id": product_id,
-                    "product_available": product__["available"],
+                    "name": product_name,
+                    "category": category,
                     "quantity": quantity,
-                    "name": product__["name"],
-                    "price": product__["price"],
-                    "address": order_address,
-                    "date": order_date
+                    "price": price,
+                    "total_price": total_price,
+                    "product_available": available,
+                    "reviewed" : reviewed
                 }
+        products = orders.get(order_id, [])
         products.append(product)
+        orders[order_id] = products
 
-    return products
+    return orders
 
 
 def get_user_data_by_id(id):

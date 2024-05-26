@@ -10,7 +10,7 @@ from handlers.ProductManagement import create_review, set_cart_item, update_prod
 from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
 from handlers.ProductManagement import update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import db_query
+from handlers.DataBaseCoordinator import db_query, get_current_dir
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
@@ -299,7 +299,6 @@ def reset_password_confirm(reset_token):
 # This view returns the account settings page
 @views.route("/profile/<username>", methods=['GET'])
 def profile(username):
-    
     if is_valid_input([username]) == False:
         return render_template("index.html", message="Invalid username.")
 
@@ -311,6 +310,18 @@ def profile(username):
 
     # Return the account settings page 
     return render_template("profile.html", username=username, id=id)
+
+# This view returns the account settings page
+@views.route("/delete_account", methods=['POST'])
+def deleteAccount():
+    userID = session.get("id")
+    print("Deleting account and data from user : " + userID)
+    db_query("EXEC deleteUser ?", (userID))
+    # Clear the session variables
+    session.clear()
+
+    # Return the login page
+    return jsonify({'ok': True})
 
 
 # This view is used to check if te username exits
@@ -429,7 +440,11 @@ def get_image(filename):
     # Send the image
     path = "/".join(filename.split("/")[:-1])
     filename = filename.split("/")[-1]
-    return send_from_directory(path, filename)
+    
+    if(os.path.exists(get_current_dir() +"\\"+ path + "\\" + filename)):
+        return send_from_directory(path, filename)
+    return send_from_directory(path, 'noimg.png')
+        
 
 
 @views.route('/catalog/<id>', methods=['GET'])
@@ -447,20 +462,17 @@ def catalog(id):
         return render_template("catalog.html", username=user["username"], id=id, admin=False)
 
 
-@views.route('/products', methods=['GET'])
+@views.route('/products/', methods=['GET'])
 def products():
-    
     # Extract query parameters
     search_term = request.args.get('searchTerm', '')
     selected_category = request.args.get('selectedCategory')
     min_price = request.args.get('minPrice', 0, type=float)
-    max_price = request.args.get('maxPrice', float('inf'), type=float)
+    max_price = request.args.get('maxPrice', 1000000, type=float)
     in_stock = request.args.get('inStock', True, type=bool)
     sort_order = request.args.get('sortOrder', 'asc')
-    
-    if max_price == float('inf'):
-        max_price=1000000
 
+    
     if selected_category == None or selected_category == 'all':
         selected_category = ""
 
@@ -810,12 +822,13 @@ def orders(id):
     if id == None:
         return redirect(url_for("views.login"))
     
-    products = get_orders_by_user_id(id)
+    userOrders = get_orders_by_user_id(id)
 
-    if products == None:
-        return render_template('orders.html', products=[])
+    print(userOrders)
+    if orders == None:
+        return render_template('orders.html', userOrders={})
 
-    return render_template('orders.html', products=products)
+    return render_template('orders.html', userOrders=userOrders)
 
 
 @views.route('/get_user_data/<id>', methods=['GET'])

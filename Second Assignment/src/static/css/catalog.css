@@ -106,30 +106,37 @@ body {
 .product-container {
     display: flex;
     justify-content: center;
-    flex-direction: column; /* Stack its children vertically */
-    align-items: center;
+    flex-direction: row;
+    width: 100%;
     margin-top: 20px; /* Optional: Add some top margin for separation from header */
 }
 
 .product-list {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* Display 5 products in each row */
-    grid-gap: 20px;
-    padding: 20px;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center; /* Center the products horizontally within each row */
+    align-items: stretch;
 }
 
 .product-card {
+    margin: 10px 10px;
+    padding: 10px 5px;
+
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
+    justify-content: space-between;
+    
     width: 200px; /* Set the desired width for the product cards */
-    height: 320px; /* Set the desired height for the product cards */
+    text-align: center;
+    
     position: relative; /* Enable positioning */
 }
 
@@ -142,7 +149,7 @@ body {
 
 .product-card .product-details {
     padding: 10px;
-    position: absolute; /* Position the details at the bottom */
+    /* position: absolute; /* Position the details at the bottom */
     bottom: 0; /* Align the details at the bottom */
     width: 100%; /* Full width */
     background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
@@ -245,22 +252,6 @@ body {
 }
 
 
-/* Login button styles */
-.logout-button {
-    background-color: red;
-    color: #fff;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-right: 10px;
-    margin-top: 45px;
-}
-
-.logout-button:hover {
-    background-color: red;
-}
 
 
 /* Add styles to the cart buttons */
@@ -294,6 +285,7 @@ body {
     display: flex;
     justify-content: center; /* Center buttons horizontally within the container */
     margin-top: 10px; /* Add some top margin to separate them from the product content */
+    align-self: flex-end;
 }
 
 
@@ -386,3 +378,19 @@ body {
     background-color: #ff4d35; /* Button background color on hover */
 }
 
+/* Login button styles */
+.logout-button {
+    background-color: red;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+    margin-top: 45px;
+}
+
+.logout-button:hover {
+    background-color: red;
+}

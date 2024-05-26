@@ -1,6 +1,3 @@
-USE [BD-Project]
-GO
-
 -- OPTIONAL PARAMS month(int), year(int)
 -- If month AND year are passed; then 
 --      Returns a table with month-year total sale
@@ -17,10 +14,14 @@ BEGIN
     IF (@month is not null AND @year is not null)
     BEGIN
         INSERT INTO @monthlySales
-        SELECT YEAR(order_date) as year,
-                MONTH(order_date) as month,
-                sum(total_price) as totalSales
-        FROM ORDERS
+        SELECT year, month, sum(total_price)
+        FROM (
+            SELECT order_id,
+                    YEAR(order_date) as year,
+                    MONTH(order_date) as month,
+                    total_price
+            FROM ORDERS
+        ) ordersMade
         GROUP BY year, month
         HAVING month=@month AND year=@year
     END
@@ -28,10 +29,14 @@ BEGIN
     ELSE
     BEGIN
         INSERT INTO @monthlySales
-        SELECT YEAR(order_date) as year,
-                MONTH(order_date) as month,
-                sum(total_price) as totalSales
-        FROM ORDERS
+        SELECT year, month, sum(total_price)
+        FROM (
+            SELECT order_id,
+                    YEAR(order_date) as year,
+                    MONTH(order_date) as month,
+                    total_price
+            FROM ORDERS
+        ) ordersMade
         GROUP BY year, month
     END
     RETURN

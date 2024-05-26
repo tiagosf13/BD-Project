@@ -1,6 +1,3 @@
-USE [BD-Project]
-GO
-
 -- Get all orders made by a user with all the products
 -- and whether a review as been made for each product
 -- Podemos apresentar tipo
@@ -11,26 +8,32 @@ GO
 --       |-> Produto 4 (preço unitario) ---- Quantidade ---- Preço total ---- Review feita
 CREATE FUNCTION getUserOrders(@userID int) RETURNS @result TABLE (
     order_id int,
+    order_date date,
     product_id int,
+    product_name varchar(255),
+    category VARCHAR(255),
+    price DECIMAL(10, 2),
     quantity int,
-    price money,
-    reviewed bit
+    total_price DECIMAL(10, 2),
+    available bit,
+    reviewed bit DEFAULT 0
 )
 AS
 BEGIN
     INSERT INTO @result(
-        order_id, product_id, quantity, price
+        order_id, order_date, product_id, product_name, category, price, quantity, total_price, available
     )
-    SELECT PRODUCTS_ORDERED.order_id, PRODUCTS_ORDERED.product_id, PRODUCTS_ORDERED.quantity, PRODUCTS.price
-    FROM (ORDERS 
-        INNER JOIN PRODUCTS_ORDERED 
-            ON ORDERS.order_id = PRODUCTS_ORDERED.order_id)
-        INNER JOIN PRODUCTS
-            ON PRODUCTS_ORDERED.product_id = PRODUCTS.product_id
+    SELECT o.order_id, o.order_date, p.product_id, p.product_name, p.category, p.price, po.quantity, o.total_price, p.available
+    FROM (ORDERS as o
+        INNER JOIN PRODUCTS_ORDERED as po
+            ON o.order_id = po.order_id)
+        INNER JOIN PRODUCTS as p
+            ON po.product_id = p.product_id
+    WHERE user_id = @userID
 
     UPDATE @result
     SET reviewed = 1
-    WHERE EXISTS (SELECT * FROM reviews WHERE product_id = @productID AND user_id = @userID) 
+    WHERE product_id in (SELECT product_id FROM reviews WHERE user_id = @userID)
     
     RETURN
 END
