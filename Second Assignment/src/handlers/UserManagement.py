@@ -396,28 +396,11 @@ def get_user_data_by_id(id):
     info = {}
 
     # Construct the SQL query to retrieve user's info, orders, and reviews
+    ## Transformado numa view
     query = """
-        SELECT 
-            u.user_id, 
-            u.username, 
-            u.email, 
-            o.order_id, 
-            po.product_id, 
-            po.quantity, 
-            o.shipping_address, 
-            o.order_date, 
-            r.rating, 
-            r.review_text
-        FROM 
-            users u
-        LEFT JOIN 
-            orders o ON u.user_id = o.user_id
-        LEFT JOIN
-            products_ordered po ON  po.order_id = o.order_id
-        LEFT JOIN 
-            reviews r ON u.user_id = r.user_id
-        WHERE 
-            u.user_id = ?
+        SELECT *
+        FROM CompleteUserData
+        WHERE user_id = ?
     """
     query_results = db_query(query, (id))
 

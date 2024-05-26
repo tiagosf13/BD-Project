@@ -135,9 +135,17 @@ def load_functions():
         db_query(read_sql_file("/queries/UDF/" + file))
 
     # Load Procedures's
-    directory = get_current_dir() + "/queries/PROC";
+    directory = get_current_dir() + "/queries/Procedures";
     for file in os.listdir(directory):
         # Delete previous procedures
         db_query("DROP PROCEDURE IF EXISTS " + file.removesuffix('.sql'))
         # Create procedure
-        db_query(read_sql_file("/queries/PROC/" + file))
+        db_query(read_sql_file("/queries/Procedures/" + file))
+
+    # Load Views
+    directory = get_current_dir() + "/queries/Views";
+    for file in os.listdir(directory):
+        # Delete previous Views
+        db_query("DROP VIEW IF EXISTS " + file.removesuffix('.sql'))
+        # Create Views
+        db_query(read_sql_file("/queries/Views/" + file))
