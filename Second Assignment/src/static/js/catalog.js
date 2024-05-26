@@ -34,7 +34,6 @@ function displayProducts() {
 
     // Construct the query parameters
     const queryParams = new URLSearchParams(payload).toString();
-    console.log(queryParams);
 
     // Fetch the products based on the search term
     fetch(`/products?${queryParams}`, {

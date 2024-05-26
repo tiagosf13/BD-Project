@@ -18,21 +18,21 @@ def get_current_dir():
 
 def get_all_products(search_term="", category="", min_price=0, max_price=100000, in_stock=True, sort_order="asc"):
     in_stock = 1 if in_stock else 0
-    print("In stock:", in_stock)
     # Secure Query - Select specific columns
     query = f"""
         SELECT product_id, product_name, product_description, price, category, stock, available 
         FROM products
-        WHERE product_name LIKE ? AND category LIKE ? AND price >= ? AND price <= ? AND available = ?
+        WHERE (product_name LIKE ? OR product_id LIKE ?) AND category LIKE ? AND price >= ? AND price <= ? AND available = ?
         ORDER BY price {sort_order};
     """
     # Add wildcards for LIKE query
     search_term = f"%{search_term}%"
     category = f"%{category}%"
     
+    results = db_query(query, (search_term, search_term, category, min_price, max_price, in_stock))
+    
     # Execute the query with parameter substitution
     # results = db_query(query, (search_term, category, min_price, max_price, in_stock))
-    results = db_query("SELECT * FROM PRODUCTS")
     # Fetch all rows in one go and convert to a list of dictionaries
     products = [{
         "id": row[0],
@@ -41,7 +41,7 @@ def get_all_products(search_term="", category="", min_price=0, max_price=100000,
         "price": row[3],
         "category": row[4],
         "stock": row[5]
-    } for row in results if row[6] == True]
+    } for row in results]
     
     return products
 
@@ -58,7 +58,27 @@ def verify_product_id_exists(id):
 
 def get_product_by_id(id):
     # Secure Query
-    query = "SELECT * FROM products WHERE product_id = ?"
+    query = """
+        SELECT 
+            products.product_id, 
+            product_name, 
+            product_description, 
+            price, 
+            category, 
+            stock, 
+            available, 
+            COALESCE(average_rating, 5.0) AS average_rating
+        FROM products
+        LEFT JOIN (
+            SELECT
+                products.product_id,
+                CAST(ROUND(AVG(reviews.rating), 2) AS DECIMAL(10, 1)) AS average_rating
+            FROM products
+            LEFT JOIN reviews ON reviews.product_id = products.product_id
+            GROUP BY products.product_id
+        ) AS products_rating ON products.product_id = products_rating.product_id
+        WHERE products.product_id = ?;
+    """
     results = db_query(query, (id))
 
 
@@ -73,7 +93,8 @@ def get_product_by_id(id):
             "price": row[3],
             "category": row[4],
             "stock": row[5],
-            "available" : row[6]
+            "available" : row[6], 
+            "average_rating": row[7]
         }
         return product
     
@@ -94,8 +115,8 @@ def get_product_reviews(product_id):
             "review_id": row[0],
             "product_id": row[1],
             "user_id": row[2],
-            "rating": row[3],
-            "review": row[4],
+            "review": row[3],
+            "rating": row[4],
             "review_date": row[5]
         }
         reviews.append(review)

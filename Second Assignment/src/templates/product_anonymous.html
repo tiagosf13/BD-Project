@@ -19,6 +19,10 @@
             <p style="color: red">ID: {{product.id}}</p>
             <p style="color: green">Price: {{product.price}} €</p>
         </div>
+        <div class="average-rating">
+            <h3>Average Rating</h3>
+            <p id="averageRating">{{product.average_rating}} ★</p>
+        </div>
     </div>
     
 
@@ -36,7 +40,6 @@
         const productId = '{{product.id}}'; // Assign the product ID to a JavaScript variable
     </script>
     <script type="text/javascript" src="{{url_for('static', filename='js/product_anonymous.js')}}"></script>
-    </script>
 
 </body>
 </html>

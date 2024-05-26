@@ -1,4 +1,4 @@
-// Function to fetch reviews and ratings and populate the review list and average rating
+﻿// Function to fetch reviews and ratings and populate the review list and average rating
 function fetchReviewsAndRating() {
 
     fetch(`/get_reviews/${productId}`)
@@ -8,25 +8,9 @@ function fetchReviewsAndRating() {
             const reviewList = document.getElementById('reviewList');
             reviewList.innerHTML = '';
 
-
-            let averageRatingCount = 0;
-            // Display reviews  
             data.forEach(review => {
                 displayReview(review);
-                averageRatingCount += review.rating;
             });
-
-            averageRatingCount = averageRatingCount / data.length;
-
-            // Round to 1 decimal place
-            averageRatingCount = Math.round(averageRatingCount * 10) / 10;
-
-            if (isNaN(averageRatingCount)) {
-                averageRatingCount = 5;
-            }
-
-            // Display the average rating
-            document.getElementById('averageRating').textContent = averageRatingCount;
         })
         .catch(error => {
             console.error('Error fetching reviews and ratings:', error);
@@ -53,7 +37,7 @@ function displayReview(review) {
     listItem.classList.add('review-balloon'); // Add a class for styling
 
     listItem.innerHTML = `
-        <strong>${review.username}</strong> - Rating: ${review.rating}<br>
+        <strong>${review.username}</strong> - ${review.rating} ★<br>
         <p class="review-paragraph">${review.review}</p>
     `;
 
