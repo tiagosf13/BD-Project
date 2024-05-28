@@ -4,11 +4,11 @@ from handlers.extensions import bcrypt
 from handlers.UserManagement import send_password_reset_email
 from flask import Blueprint, flash, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
 from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
-from handlers.UserManagement import update_username, update_email, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
-from handlers.UserManagement import get_user_role, compose_email_body, update_password, generate_reset_token, set_reset_token_for_user
+from handlers.UserManagement import update_user_account, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
+from handlers.UserManagement import get_user_role, compose_email_body, generate_reset_token, set_reset_token_for_user
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
-from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
-from handlers.ProductManagement import update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
+from handlers.ProductManagement import create_product, remove_product, verify_id_exists, create_product_image
+from handlers.ProductManagement import update_product, check_product_availability
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
 from handlers.DataBaseCoordinator import db_query, get_current_dir
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
@@ -46,7 +46,7 @@ def login():
             flash("User not found!")
             return render_template("login.html", message="User not found!")
 
-        if user["user_id"] and bcrypt.check_password_hash(user["hashed_password"], password):
+        if user["user_id"] and bcrypt.check_password_hash(user["hashed_password"].encode('utf8'), password):
             return redirect(url_for("views.verify_totp_login", id=user["user_id"]))
 
         # Password is incorrect
@@ -290,7 +290,8 @@ def reset_password_confirm(reset_token):
             confirm_password = request.form.get('confirm_password')
 
             if new_password == confirm_password:
-                update_password(user_id, bcrypt.generate_password_hash(new_password).decode("utf-8"))
+                update_user_account(user_id, 
+                                    new_password=bcrypt.generate_password_hash(new_password).decode("utf-8"))
                 return redirect(url_for('views.login'))
         return render_template('reset_password.html', reset_token=reset_token)
     else:
@@ -368,7 +369,7 @@ def check_email():
 @views.route('/update_account/<id>', methods=['POST'])
 def update_account(id):
 
-    if id == None and session.get("id") == None:
+    if session.get("id") == None:
         return redirect(url_for("views.login"))
     
     try:
@@ -399,32 +400,28 @@ def update_account(id):
         password = request.form.get("psw")
         old_password = request.form.get("psw-old")
 
-        preconditions_check = is_valid_input([username, email, password, old_password]) and \
-                                not check_username_exists(username) and \
-                                not check_email_exists(email)  and \
-                                id != None and \
-                                bcrypt.check_password_hash(search_user("user_id", id, "hashed_password")["hashed_password"], old_password)
-    
-        if preconditions_check:
-            # Check if the username field wasn't empty and occupied by another user
-            if username != "":
-                # Update the username
-                update_username(id, username)
-                # Set the session's username
-                session["username"] = username
-            # Check if the email field wasn't empty and occupied by another user
-            if email != "":
-                # Update the email
-                update_email(id, email)
-            # Check if the password wasn't empty
-            if password != "":
-                # Update the password
-                # Hash the password before storing it in the database
-                update_password(id, bcrypt.generate_password_hash(password).decode("utf-8"))
-            # Return the profile page
-            return redirect(url_for("views.catalog", id=id))
-        else:
-            return jsonify({'error': 'Invalid input.'}), 500
+        if id != None and bcrypt.check_password_hash(search_user("user_id", id, "hashed_password")["hashed_password"], old_password):
+            flash("Old password is incorrect")
+            return render_template("profile.html", username=username, id=id, message="Invalid password.")
+        
+        if not is_valid_input([username, email]):
+            flash("New username/email is not valid")
+            return render_template("profile.html", username=username, id=id, message="Invalid username/mail.")
+        
+        ## Check is made by sql
+        # if check_username_exists(username):
+        #     flash("New username is already in use.")
+        #     return render_template("profile.html", username=username, id=id, message="Invalid username.")
+        
+        # if check_email_exists(email):
+        #     flash("New email is already in use.")
+        #     return render_template("profile.html", username=username, id=id, message="Invalid email.")
+
+        update_user_account(id, new_username=username,
+                                new_email=email, 
+                                new_password=bcrypt.generate_password_hash(password).decode("utf-8"))
+        # Return the profile page
+        return redirect(url_for("views.catalog", id=id))
     except Exception as e:
         print(e)
         return jsonify({'error': "Internal Server Error"}), 500
@@ -492,7 +489,14 @@ def products():
     if selected_category == None or selected_category == 'all':
         selected_category = ""
 
-    products = get_all_products(search_term, selected_category, min_price, max_price, in_stock, sort_order)
+    if (id := session.get("id") is not None):
+        user = search_user("user_id", session.get("id"), "username, admin_role")
+        isAdmin = user["admin_role"]
+    else:
+        isAdmin = False
+        
+    products = get_all_products(search_term, selected_category, min_price, max_price, in_stock, sort_order,
+                                admin=isAdmin)
 
     return jsonify(products)
 
@@ -568,16 +572,16 @@ def edit_product_by_id(id):
 
         if preconditions_check:
             # Update the product details of the atributtes that are not empty
-            if product_name != "":
-                update_product_name(product_id, product_name)
-            if product_description != "":
-                update_product_description(product_id, product_description)
-            if product_price != "":
-                update_product_price(product_id, product_price)
-            if product_category != "":
-                update_product_category(product_id, product_category)
-            if product_quantity != "":
-                update_product_quantity(product_id, product_quantity)
+            # TODO transformar isto numa procedure
+            update_product({
+                "productID":int(product_id),
+                "productName":product_name,
+                "productDescription": product_description,
+                "productPrice":float(product_price),
+                "productCategory":product_category,
+                "productQuantity": product_quantity
+            })
+
             if product_photo and product_photo.content_length < 5120 * 5120:
                 create_product_image(product_id, product_photo)
         return redirect(url_for("views.catalog", id=id))

@@ -86,7 +86,6 @@ def db_query(query, params=None):
 
     # Check if the query has SELECT
     if select_in_query:
-
         # Return the requested data
         return data
 

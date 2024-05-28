@@ -12,7 +12,7 @@ bcrypt.init_app(app)
 
 # Check if the database tables exist
 # Warning: deletes everything except Users
-check_database_tables_exist(populateTables=True)
+check_database_tables_exist(populateTables=False)
 
 # Define a custom error handler for 403 (Not Found) errors
 @app.errorhandler(403)

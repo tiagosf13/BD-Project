@@ -262,40 +262,11 @@ def create_user(username, password, email, secret_key, secret_key_timestamp):
 
 
 
-def change_password(id, password):
-
-    # Build the query to update the password in the user's table
-    # Secure Query
-    query = 'UPDATE users SET password = ? WHERE id = ?'
-    db_query(query, (password, id))
-
-
-def update_username(id, new_username):
-
+def update_user_account(id, new_username='', new_email='', new_password=''):
     # Build the query to update the username in the user's table
     # Secure Query
-    query = "UPDATE users SET username = ? WHERE user_id = ?"
-    db_query(query, (new_username, id))
-
-
-def update_email(id, email):
-
-    # Verify if the email is valid
-    if not is_valid_input(email):
-        return False
-
-    # Build the query to update the email in the user's table
-    # Secure Query
-    query = "UPDATE users SET email = ? WHERE user_id = ?"
-    db_query(query, (email, id))
-
-
-def update_password(username, password):
-    id = str(get_id_by_username(username))
-    # Build the query to update the password in the user's table
-    # Secure Query
-    query = "UPDATE users SET hashed_password = ? WHERE user_id = ?;"
-    db_query(query, (str(password), id))
+    query = "exec updateAccount ?, ?, ?, ?"
+    db_query(query, (id, new_username, new_email, new_password))
 
 
 def get_username_by_id(id):
@@ -350,10 +321,6 @@ def calculate_total_price(products):
 
 
 def get_orders_by_user_id(id):
-
-    # query = "SELECT orders.order_id, product_id, shipping_address, order_date, quantity FROM orders \
-    #         LEFT JOIN products_ordered ON orders.order_id = products_ordered.order_id \
-    #         WHERE orders.user_id = ?;"
     query = "SELECT * from getUserOrders(?)"
     results = db_query(query, (id))
 

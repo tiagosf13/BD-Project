@@ -16,20 +16,39 @@ def get_current_dir():
 
 
 
-def get_all_products(search_term="", category="", min_price=0, max_price=100000, in_stock=True, sort_order="asc"):
+def get_all_products(search_term="", category="", min_price=0, max_price=100000, in_stock=True, sort_order="asc", admin = False):
     in_stock = 1 if in_stock else 0
-    # Secure Query - Select specific columns
-    query = f"""
-        SELECT product_id, product_name, product_description, price, category, stock, available 
-        FROM products
-        WHERE (product_name LIKE ? OR product_id LIKE ?) AND category LIKE ? AND price >= ? AND price <= ? AND available = ?
-        ORDER BY price {sort_order};
-    """
-    # Add wildcards for LIKE query
-    search_term = f"%{search_term}%"
-    category = f"%{category}%"
-    
-    results = db_query(query, (search_term, search_term, category, min_price, max_price, in_stock))
+
+    if not admin:
+        # Secure Query - Select specific columns
+        query = f"""
+            SELECT * 
+            FROM Available_Products
+            WHERE (product_name LIKE ? OR product_id LIKE ?) 
+                AND category LIKE ? 
+                AND price BETWEEN ? AND ?
+            ORDER BY price {sort_order};
+        """
+        # Add wildcards for LIKE query
+        search_term = f"%{search_term}%"
+        category = f"%{category}%"
+        
+        results = db_query(query, (search_term, search_term, category, min_price, max_price))
+    else:
+        query = f"""
+            SELECT * 
+            FROM products
+            WHERE (product_name LIKE ? OR product_id LIKE ?)
+              AND category LIKE ? 
+              AND price BETWEEN ? AND ? 
+              AND available = ?
+            ORDER BY price {sort_order};
+        """
+        # Add wildcards for LIKE query
+        search_term = f"%{search_term}%"
+        category = f"%{category}%"
+        
+        results = db_query(query, (search_term, search_term, category, min_price, max_price, in_stock))
     
     # Execute the query with parameter substitution
     # results = db_query(query, (search_term, category, min_price, max_price, in_stock))
@@ -56,29 +75,9 @@ def verify_product_id_exists(id):
         return True
     
 
-def get_product_by_id(id):
+def get_product_by_id(id: int):
     # Secure Query
-    query = """
-        SELECT 
-            products.product_id, 
-            product_name, 
-            product_description, 
-            price, 
-            category, 
-            stock, 
-            available, 
-            COALESCE(average_rating, 5.0) AS average_rating
-        FROM products
-        LEFT JOIN (
-            SELECT
-                products.product_id,
-                CAST(ROUND(AVG(reviews.rating), 2) AS DECIMAL(10, 1)) AS average_rating
-            FROM products
-            LEFT JOIN reviews ON reviews.product_id = products.product_id
-            GROUP BY products.product_id
-        ) AS products_rating ON products.product_id = products_rating.product_id
-        WHERE products.product_id = ?;
-    """
+    query = "SELECT * FROM getProductById(?)";
     results = db_query(query, (id))
 
 
@@ -100,7 +99,6 @@ def get_product_by_id(id):
     
 
 def get_product_reviews(product_id):
-
     # check if the product exists
     if not verify_product_id_exists(product_id):
         return None
@@ -125,7 +123,6 @@ def get_product_reviews(product_id):
 
 
 def check_product_availability(product_id):
-
     # Secure Query: Check if the ID exists in the specified table
     query = "SELECT available FROM products WHERE product_id = ?;"
     results = db_query(query, (product_id))
@@ -134,14 +131,7 @@ def check_product_availability(product_id):
 
 
 def get_cart(user_id):
-
-    query = """
-        SELECT products.product_id, quantity, products.product_name, products.price
-        FROM carts
-        JOIN products ON carts.product_id = products.product_id
-        WHERE user_id=?
-        ;
-    """
+    query = "SELECT * FROM getUserCart(?)"
     result = db_query(query, (user_id))
 
     cart = []

@@ -112,47 +112,6 @@ def remove_product(id):
     return True
 
 
-def update_product_name(id, name):
-    # Secure Query
-    query = "UPDATE products SET product_name = ? WHERE product_id = ?;"
-    db_query(query, (name, id))
-
-    return True
-
-
-def update_product_description(id, description):
-    # Secure Query
-    query = "UPDATE products SET product_description = ? WHERE product_id = ?;"
-    db_query(query, (description, id))
-
-    return True
-
-
-def update_product_price(id, price):
-    # Secure Query
-    query = "UPDATE products SET price = ? WHERE product_id = ?"
-    db_query(query, (price, id))
-
-    return True
-
-
-def update_product_category(id, category):
-    
-    # Secure Query
-    query = "UPDATE products SET category = ? WHERE product_id = ?"
-    db_query(query, (category, id))
-
-    return True
-
-
-def update_product_quantity(id, quantity):
-    # Secure Query
-    query = "UPDATE products SET stock = ? WHERE product_id = ?"
-    db_query(query, (quantity, id))
-
-    return True
-
-
 def create_review(id, user_id, review, rating):
     review_id = str(generate_random_product_id("reviews"))
 
@@ -231,5 +190,21 @@ def update_product_after_order(products):
         if product_stock < quantity:
             return False
         # update the product quantity
-        update_product_quantity(product["product_id"], product_stock - quantity)
+        update_product( {
+            "productID" : int(product["product_id"]),
+            "productQuantity": product_stock - quantity,
+        })
     return True
+
+def update_product(updatedProduct: dict):
+    query = "exec updateProduct"
+    params = []
+
+    for key, value in updatedProduct.items():
+        if value is not None and value != '':
+            query = f"{query} @{key}=?,"
+            params.append(value)
+    # Remove last comma
+    query = query[:-1]
+
+    db_query(query=query, params=params)

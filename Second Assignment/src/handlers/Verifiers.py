@@ -2,7 +2,7 @@ import re
 from handlers.DataBaseCoordinator import db_query
 
 
-def check_username_exists(username):
+def check_username_exists(username=''):
 
     # Execute the query to check if the username exists in the user's table
     # Secure Query
@@ -30,7 +30,7 @@ def is_valid_input(text_list):
     return True
 
 
-def check_email_exists(email):
+def check_email_exists(email=''):
 
     #Execute the query to check if the email exists in the user's table
     # Secure Query

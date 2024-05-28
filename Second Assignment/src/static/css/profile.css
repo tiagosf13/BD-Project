@@ -50,6 +50,12 @@ input[type=submit] {
     text-align: center;
 }
 
+.alignCenter {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
 .savebtn {
     background-color: rgb(77, 155, 75);
     color: white;

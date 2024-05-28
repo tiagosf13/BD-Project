@@ -6,46 +6,51 @@
     <title>ECO - Account Settings</title>
     <link rel="icon" type="image/png"
         href="{{ url_for('views.get_image', filename='database/accounts/' + id + '.png') }}" />
-    <link rel="stylesheet" href="{{url_for('static', filename='css/profile.css')}}">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}" />
+    <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}" />
+    <link rel="stylesheet" href="{{url_for('static', filename='css/profile.css')}}" />
     <script type="text/javascript" src="{{url_for('static', filename='js/profile.js')}}"></script>
 </head>
 
 <body style="margin-top: 7%;">
     <h2>Account Settings</h2>
     <img src="{{ url_for('views.get_image', filename='database/accounts/' + id + '.png') }}" alt="Profile Photo"
-        class="profile-image" style="margin-top: 70px;">
+        class="profile-image" style="margin-top: 20px;">
     <h2>{{username}}</h2>
     <form action="/update_account/{{id}}" method="post" enctype="multipart/form-data" onsubmit="return validateForm();"
-        style="margin-top: 70px;">
+        style="padding: 20px 0">
         <div class="container">
-            <label for="username"><b>Username</b></label>
-            <input type="text" placeholder="Enter Username" name="username" id="username"
-                style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <h3 style="color:red; padding: 15px 0">{{ message }}</h3>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <div class="alignCenter">
+                <label for="username"><b>Username</b></label>
+                <input type="text" placeholder="Enter Username" name="username" id="username"
+                    style="margin-bottom: 30px; width: 200px;">
 
-            <label for="email"><b>Email</b></label>
-            <input type="text" placeholder="Enter Email" name="email" id="email"
-                style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;">
+                <label for="email"><b>Email</b></label>
+                <input type="text" placeholder="Enter Email" name="email" id="email"
+                    style="margin-bottom: 30px; width: 200px">
 
-            <label for="psw"><b>Old Password</b></label>
-            <input type="password" placeholder="Enter Password" name="psw-old" id="psw-old"
-                style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;"
-                oninput="checkPasswordCriteria()" required>
+                <label for="psw"><b>Old Password</b></label>
+                <input type="password" placeholder="Enter Password" name="psw-old" id="psw-old"
+                    style="margin-bottom: 30px; width: 200px;"
+                    oninput="checkPasswordCriteria()" required>
 
-            <label for="psw"><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" name="psw" id="psw"
-                style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;"
-                oninput="checkPasswordCriteria()">
+                <label for="psw"><b>New Password</b></label>
+                <input type="password" placeholder="Enter Password" name="psw" id="psw"
+                    style="margin-bottom: 30px; width: 200px;"
+                    oninput="checkPasswordCriteria()">
 
-            <label for="psw-repeat"><b>Repeat Password</b></label>
-            <input type="password" placeholder="Repeat Password" name="psw-repeat" id="psw-repeat"
-                style="margin-bottom: 30px; width: 200px; display: block; margin-left: 39%;"
-                oninput="checkPasswordCriteria()">
-            <div id="error-message-psw" style="color: red;"></div>
-            <div id="error-message-username" style="color: red;"></div>
-            <div id="error-message-email" style="color: red;"></div>
-
+                <label for="psw-repeat"><b>Repeat New Password</b></label>
+                <input type="password" placeholder="Repeat Password" name="psw-repeat" id="psw-repeat"
+                    style="margin-bottom: 30px; width: 200px;"
+                    oninput="checkPasswordCriteria()">
+            </div>
             <!-- Update your HTML form with a list to display password criteria -->
             <!-- Place this list under the password fields -->
             <div class="password-criteria">
