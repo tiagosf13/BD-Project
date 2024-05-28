@@ -141,6 +141,8 @@ def verify_totp_signup():
         session.pop("secret_key", None)
         session.pop("secret_key_timestamp", None)
 
+        session["id"] = id
+
         if ans == False:
             return render_template("signup.html", message="Error! Please try again.")
         else:
@@ -196,13 +198,10 @@ def emergency_codes(id):
 
 @views.route('/get_codes/<id>', methods=['GET'])
 def get_emergency_codes(id):
-
-    if session.get("id") != id or session.get("id") == None or is_valid_input([id]) == False or id  == None:
+    if str(session.get("id")) != id or session.get("id") == None or is_valid_input([id]) == False or id  == None:
         return redirect(url_for("views.login"))
-
     # Generate 10 emergency codes, each with 15 characters (Upper case letters, Lower case letters, Special characters and numbers)
     codes = generate_emergency_codes(id)
-
     # Logic to fetch codes (replace with your actual data retrieval)
     return jsonify({'codes': codes})
 

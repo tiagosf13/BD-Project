@@ -1,4 +1,4 @@
-use [BD-Project];
+USE [p2g3];
 
 DELETE FROM reviews
 WHERE 1=1;

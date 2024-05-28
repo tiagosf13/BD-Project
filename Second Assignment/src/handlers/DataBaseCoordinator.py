@@ -48,7 +48,8 @@ def db_query(query, params=None):
         Driver='{SQL Server}',
         Server=credentials["host"],
         Database=credentials["dbname"],
-        trusted_connection='yes',
+        UID=credentials["user"],
+        PWD=credentials["password"]
     )
 
     # Initiate the cursor
