@@ -55,7 +55,15 @@ function addReview(event) {
         method: 'POST',
         body: formData,
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.ok) {
+            return response.json(); // Parse JSON if response is OK
+        } else if (response.status === 403) {
+            return response.json().then(data => { throw new Error(data.message); }); // Extract error message
+        } else {
+            throw new Error('Something went wrong');
+        }
+    })
     .then(data => {
         // Assuming the server responds with data, you can handle it here
         // For example, you can display a success message or update the review list
@@ -66,9 +74,13 @@ function addReview(event) {
 
         // Refresh the average rating
         fetchReviewsAndRating();
+
+        // Handle successful review submission
+        alert(data.message); // Display success message
     })
     .catch(error => {
         console.error('Error adding review:', error);
+        alert(error.message); // Display error message
     });
 }
 

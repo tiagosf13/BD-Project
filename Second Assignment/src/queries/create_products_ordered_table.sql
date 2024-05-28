@@ -1,4 +1,4 @@
-USE [BD-Project]
+USE [p2g3]
 
 -- Check if the table exists -- Create the table if it does not exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'products_ordered')

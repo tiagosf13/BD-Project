@@ -17,7 +17,6 @@ function checkPasswordCriteria() {
     
     // TODO removed password restrictions
     document.getElementById('savebtn').removeAttribute('disabled');
-    return
     // Make an AJAX request to Flask route for breach verification
     fetch('/verify-password', {
         method: 'POST',
