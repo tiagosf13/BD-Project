@@ -9,6 +9,9 @@ from handlers.Verifiers import is_valid_input
 from handlers.Retrievers import get_current_dir
 from datetime import datetime, timedelta  # For working with token expiration
 
+def delete_user(user_id):
+    query = "EXEC deleteUser ?"
+    db_query(query, (user_id))
 
 def search_user(search_regex, search_regex_value, select_attribute = "*"):
 
@@ -261,7 +264,12 @@ def create_user(username, password, email, secret_key, secret_key_timestamp):
     # Return the created user
     return id, ans
 
+def change_password(id, password):
 
+    # Build the query to update the password in the user's table
+    # Secure Query
+    query = 'UPDATE users SET password = ? WHERE id = ?'
+    db_query(query, (password, id))
 
 def update_user_account(id, new_username='', new_email='', new_password=''):
     # Build the query to update the username in the user's table
@@ -446,3 +454,16 @@ def generate_excel_user_data(id):
             df_orders.to_excel(writer, sheet_name='Orders', index=False)
     
     return current_directory
+
+def get_cart_quantity(user_id, product_id):
+    # Construct the SQL query to retrieve the quantity of the product in the user's cart
+    # Secure Query
+    query = """
+            SELECT cart.quantity, products.stock
+            FROM cart
+                JOIN products ON cart.product_id = products.product_id
+            WHERE user_id = ? AND product_id = ?;
+    """
+    result = db_query(query, (user_id, product_id))
+
+    return {"cart_quantity": result[0][0], "product_stock": result[0][1]} if result else {}

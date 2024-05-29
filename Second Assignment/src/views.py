@@ -1,16 +1,15 @@
-from math import prod
 import os, tempfile
 from handlers.extensions import bcrypt
-from handlers.UserManagement import send_password_reset_email
+from handlers.UserManagement import send_password_reset_email, delete_user, get_cart_quantity
 from flask import Blueprint, flash, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
 from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
 from handlers.UserManagement import check_user_bought_product, update_user_account, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
 from handlers.UserManagement import get_user_role, compose_email_body, generate_reset_token, set_reset_token_for_user
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
-from handlers.ProductManagement import create_product, remove_product, verify_id_exists, create_product_image
-from handlers.ProductManagement import update_product, check_product_availability
+from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
+from handlers.ProductManagement import remove_all_products_from_cart, remove_product_from_cart, update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import db_query, get_current_dir
+from handlers.DataBaseCoordinator import get_current_dir
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email, get_monthly_sales
 from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
@@ -232,10 +231,10 @@ def verify_totp_login(id):
         
         # TODO deactivated need for inserting totp code
         # Verify the TOTP code
-        # if preconditions_check:
-        #     remove_valid_emergency_code(id, token)
-        # elif not verify_totp_code(str(token), secret_key):
-        #     return jsonify({'error': 'Invalid TOTP code. Please try again.'}), 500
+        if preconditions_check:
+            remove_valid_emergency_code(id, token)
+        elif not verify_totp_code(str(token), secret_key):
+            return jsonify({'error': 'Invalid TOTP code. Please try again.'}), 500
         
         # Set session variables
         session["username"] = username
@@ -317,7 +316,10 @@ def profile(username):
 @views.route("/delete_account", methods=['POST'])
 def deleteAccount():
     userID = session.get("id")
-    db_query("EXEC deleteUser ?", (userID))
+    
+    if userID == None:
+        return redirect(url_for("views.login"))
+    delete_user(userID)
     # Clear the session variables
     session.clear()
 
@@ -682,11 +684,9 @@ def add_item_to_cart(product_id):
                 return jsonify({'error': 'Invalid quantity.'}), 500
             
             # Secure Query
-            query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
-            result = db_query(query, (product_id, id))
-            product_stock = get_product_by_id(product_id)["stock"]
+            result = get_cart_quantity(id, product_id)
 
-            if (result != [] and result[0][2] + quantity > product_stock) or (result == [] and quantity > product_stock):
+            if (result != {} and result["cart_quantity"] + quantity > result["product_stock"]) or (result == {} and quantity > result["product_stock"]):
                 return jsonify({'error': 'Not enough stock.'}), 500
             else:
                 set_cart_item(id, product_id, quantity, "add")
@@ -716,17 +716,13 @@ def remove_item_from_cart(product_id):
             if check_product_in_cart(id, product_id) == False or quantity <= 0:
                 return jsonify({'error': 'Product not in cart.'}), 500
             else:
-                # Secure Query
-                query = "SELECT * FROM carts WHERE product_id = ? AND user_id = ?"
-                result = db_query(query, (product_id, id))
+                result = get_cart_quantity(id, product_id)
 
-                if result != [] and result[0][2] == quantity:
+                if result != {} and result["cart_quantity"] == quantity:
                     # Remove the product from the cart
-                    # Secure Query
-                    query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?"
-                    db_query(query, (product_id, id))
+                    remove_product_from_cart(product_id, id)
                     return jsonify({'message': 'Product removed from the cart.'}), 200
-                elif result != [] and result[0][2] - quantity >= 0:
+                elif result != {} and result["cart_quantity"] - quantity >= 0:
                     # Secure Query: Update the user's cart in the database
                     set_cart_item(id, product_id, quantity, "remove")
                     return jsonify({'message': 'Product removed from the cart.'}), 200
@@ -759,9 +755,7 @@ def remove_all_items_cart():
     # Remove all the products from the cart
 
     # Remove all the products from the cart
-    # Secure Query
-    query = "DELETE FROM carts WHERE user_id = ?"
-    db_query(query, (id))
+    remove_all_products_from_cart(id)
 
     return jsonify({'message': 'Cart cleared.'}), 200
 
@@ -809,9 +803,8 @@ def checkout():
                 
                 # Send the order confirmation email with the PDF attachment
                 send_email_with_attachment(to, 'Order Confirmation', body, pdf_path)
-
-            query = "DELETE FROM carts WHERE user_id = ?"
-            db_query(query, (user_id))
+            
+            remove_all_products_from_cart(user_id)
 
 
             # Redirect to a thank you page or any other appropriate page

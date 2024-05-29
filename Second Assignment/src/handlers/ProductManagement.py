@@ -33,7 +33,7 @@ def verify_id_exists(id, table):
         query = "SELECT product_id FROM reviews WHERE review_id = ?;"
     elif table == "orders":
         query = "SELECT user_id FROM orders WHERE order_id = ?;"
-   
+    
     results = db_query(query, (id))
 
     print(results)
@@ -109,6 +109,18 @@ def remove_product(id):
         UPDATE products SET available = 0 WHERE product_id = ?;
     """
     db_query(query, (id, id))
+    return True
+
+def remove_product_from_cart(id, user_id):
+    # Secure Query to delete the product from the carts
+    query = "DELETE FROM carts WHERE product_id = ? AND user_id = ?;"
+    db_query(query, (id, user_id))
+    return True
+
+def remove_all_products_from_cart(user_id):
+    # Secure Query to delete the product from the carts
+    query = "DELETE FROM carts WHERE user_id = ?;"
+    db_query(query, (user_id))
     return True
 
 
