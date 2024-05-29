@@ -1,3 +1,7 @@
+USE [p2g3];
+
+DROP FUNCTION IF EXISTS getMonthlySalesTable
+GO
 -- OPTIONAL PARAMS month(int), year(int)
 -- If month AND year are passed; then 
 --      Returns a table with month-year total sale

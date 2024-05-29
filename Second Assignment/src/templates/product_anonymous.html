@@ -21,7 +21,7 @@
         </div>
         <div class="average-rating">
             <h3>Average Rating</h3>
-            <p id="averageRating">{{product.average_rating}} ★</p>
+            <p id="averageRating">{{'%0.1f'|format(product.average_rating|float)}} ★</p>
         </div>
     </div>
     

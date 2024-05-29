@@ -1,11 +1,10 @@
+USE [p2g3];
+
+DROP FUNCTION IF EXISTS getUserOrders
+GO
+
 -- Get all orders made by a user with all the products
 -- and whether a review as been made for each product
--- Podemos apresentar tipo
---  -> Order 1
---       |-> Produto 1 (preço unitario) ---- Quantidade ---- Preço total ---- Review feita
---       |-> Produto 2 (preço unitario) ---- Quantidade ---- Preço total ---- Review feita
---       |-> Produto 3 (preço unitario) ---- Quantidade ---- Preço total ---- Botao Adicionar review
---       |-> Produto 4 (preço unitario) ---- Quantidade ---- Preço total ---- Review feita
 CREATE FUNCTION getUserOrders(@userID int) RETURNS @result TABLE (
     order_id int,
     order_date date,

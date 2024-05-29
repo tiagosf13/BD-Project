@@ -1,19 +1,22 @@
+from math import prod
 import os, tempfile
 from handlers.extensions import bcrypt
-from handlers.UserManagement import send_password_reset_email, delete_user, get_cart_quantity
+from handlers.UserManagement import send_password_reset_email
 from flask import Blueprint, flash, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
-from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data
-from handlers.UserManagement import check_user_bought_product, update_user_account, is_valid_reset_token, get_user_by_reset_token, clear_reset_token
-from handlers.UserManagement import get_user_role, compose_email_body, generate_reset_token, set_reset_token_for_user
-from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order
-from handlers.ProductManagement import create_product, remove_product, verify_id_exists, update_product_name, create_product_image
-from handlers.ProductManagement import remove_all_products_from_cart, remove_product_from_cart, update_product_description, check_product_availability, update_product_price, update_product_category, update_product_quantity
+from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data, \
+                                    check_user_bought_product, update_user_account, is_valid_reset_token, get_user_by_reset_token, \
+                                    clear_reset_token, get_user_role, compose_email_body, generate_reset_token, set_reset_token_for_user, delete_user
+
+from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order, \
+                                        create_product, remove_product, verify_id_exists, create_product_image, \
+                                        update_product, check_product_availability
+
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import get_current_dir
+from handlers.DataBaseCoordinator import db_query, get_current_dir
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email, get_monthly_sales
-from handlers.TOTPHandler import  remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code
-from handlers.TOTPHandler import generate_totp_atributes, verify_totp_code, generate_emergency_codes
+from handlers.TOTPHandler import remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code,\
+                                generate_totp_atributes, verify_totp_code, generate_emergency_codes
 
 
 

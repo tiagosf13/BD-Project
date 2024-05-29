@@ -1,3 +1,8 @@
+USE [p2g3];
+
+DROP PROCEDURE IF EXISTS updateAccount
+GO
+
 CREATE PROCEDURE updateAccount
     @userId int,
     @username varchar(255),

@@ -1,3 +1,8 @@
+USE [p2g3];
+
+DROP VIEW IF EXISTS CompleteUserData
+GO
+
 CREATE VIEW CompleteUserData AS
 SELECT u.user_id, 
             u.username, 

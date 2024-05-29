@@ -94,13 +94,13 @@ def db_query(query, params=None):
 def check_database_tables_exist(populateTables = False):
     
     # Read the SQL files for creating the tables
-    create_table_users = read_sql_file("/queries/create_users_table.sql")
-    create_table_products = read_sql_file("/queries/create_products_table.sql")
-    create_table_emergency_codes = read_sql_file("/queries/create_emergency_codes_table.sql")
-    create_table_carts = read_sql_file("/queries/create_carts_table.sql")
-    create_table_reviews = read_sql_file("/queries/create_reviews_table.sql")
-    create_table_orders = read_sql_file("/queries/create_orders_table.sql")
-    create_table_products_ordered = read_sql_file("/queries/create_products_ordered_table.sql")
+    create_table_users = read_sql_file("/queries/DDL/create_users_table.sql")
+    create_table_products = read_sql_file("/queries/DDL/create_products_table.sql")
+    create_table_emergency_codes = read_sql_file("/DDL/queries/create_emergency_codes_table.sql")
+    create_table_carts = read_sql_file("/queries/DDL/create_carts_table.sql")
+    create_table_reviews = read_sql_file("/queries/DDL/create_reviews_table.sql")
+    create_table_orders = read_sql_file("/queries/DDL/create_orders_table.sql")
+    create_table_products_ordered = read_sql_file("/queries/DDL/create_products_ordered_table.sql")
 
     # Execute the SQL queries for creating the tables
     db_query(create_table_users)
@@ -111,41 +111,5 @@ def check_database_tables_exist(populateTables = False):
     db_query(create_table_orders)
     db_query(create_table_products_ordered)
 
-
-    load_functions()
-
     if (populateTables):
         db_query(read_sql_file("/queries/InitialTestData/populateDB.sql"));
-
-def load_functions():
-    # Load triggers
-    directory = get_current_dir() + "/queries/Triggers";
-    for file in os.listdir(directory):
-        # Delete previous Trigger
-        db_query("DROP TRIGGER IF EXISTS " + file.removesuffix('.sql'))
-        # Create trigger
-        db_query(read_sql_file("/queries/Triggers/" + file))
-
-    # Load UDF's
-    directory = get_current_dir() + "/queries/UDF";
-    for file in os.listdir(directory):
-        # Delete previous UDF
-        db_query("DROP FUNCTION IF EXISTS " + file.removesuffix('.sql'))
-        # Create UDF
-        db_query(read_sql_file("/queries/UDF/" + file))
-
-    # Load Procedures's
-    directory = get_current_dir() + "/queries/Procedures";
-    for file in os.listdir(directory):
-        # Delete previous procedures
-        db_query("DROP PROCEDURE IF EXISTS " + file.removesuffix('.sql'))
-        # Create procedure
-        db_query(read_sql_file("/queries/Procedures/" + file))
-
-    # Load Views
-    directory = get_current_dir() + "/queries/Views";
-    for file in os.listdir(directory):
-        # Delete previous Views
-        db_query("DROP VIEW IF EXISTS " + file.removesuffix('.sql'))
-        # Create Views
-        db_query(read_sql_file("/queries/Views/" + file))

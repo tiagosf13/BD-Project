@@ -21,6 +21,7 @@ def get_all_products(search_term="", category="", min_price=0, max_price=100000,
 
     if not admin:
         # Secure Query - Select specific columns
+        ## TODO podemos fazer isto numa UDF mas mantemos o order by fora
         query = f"""
             SELECT * 
             FROM Available_Products

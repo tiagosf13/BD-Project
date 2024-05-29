@@ -1,3 +1,8 @@
+USE [p2g3];
+
+DROP FUNCTION IF EXISTS getProductById
+GO
+
 CREATE FUNCTION getProductById (@productID int) RETURNS TABLE
 RETURN (
     SELECT products.*, p.avgRating

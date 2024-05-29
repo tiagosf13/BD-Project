@@ -1,3 +1,8 @@
+USE [p2g3];
+
+DROP PROCEDURE IF EXISTS updateProduct
+GO
+
 CREATE PROCEDURE updateProduct 
     @productID int = null,
     @productName VARCHAR(255) = null,

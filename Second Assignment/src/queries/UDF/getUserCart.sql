@@ -1,3 +1,8 @@
+USE [p2g3];
+
+DROP FUNCTION IF EXISTS getUserCart
+GO
+
 CREATE FUNCTION getUserCart(@userID int) RETURNS TABLE
 RETURN (
     SELECT products.product_id, quantity, products.product_name, products.price

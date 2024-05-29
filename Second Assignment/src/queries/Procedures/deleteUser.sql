@@ -1,3 +1,8 @@
+USE [p2g3];
+
+DROP PROCEDURE IF EXISTS deleteUser
+GO
+
 -- Create the stored procedure in the specified schema
 CREATE PROCEDURE deleteUser @userID int
 AS

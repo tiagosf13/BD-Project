@@ -1,6 +1,11 @@
+USE [p2g3];
+
+DROP TRIGGER IF EXISTS SingleReviewPerUser
+GO
+
 -- Trigger will run to guarantee that each user can only have one review
 -- On each product, if a new review is made, review is simply overwritten
-CREATE TRIGGER dbo.SingleReviewPerUser on dbo.REVIEWS
+CREATE TRIGGER SingleReviewPerUser on dbo.REVIEWS
 INSTEAD OF INSERT
 AS
 BEGIN
