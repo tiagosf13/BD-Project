@@ -104,6 +104,7 @@ def create_product(product_name, product_description, product_price, product_cat
 def remove_product(id):
 
     # Secure Query to delete the product from the carts
+    ## TODO transformar em Procedure com transaction
     query = """
         DELETE FROM carts WHERE product_id = ?;
         UPDATE products SET available = 0 WHERE product_id = ?;

@@ -159,7 +159,7 @@ def send_recovery_password(email):
         # Extract the username and password from the user
         name = user["username"]
         password = generate_password(15)
-        change_password(id, password)
+        update_user_account(id, new_password=password)
 
         # Build the HTML body
         HTMLBody = f"""

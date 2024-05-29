@@ -7,7 +7,8 @@ reportlab
 pyotp
 qrcode
 requests
+./python_ldap-3.4.0-cp39-cp39-win_amd64.whl
+openpyxl
 pyOpenSSL
 cryptography
 secrets
-openpyxl

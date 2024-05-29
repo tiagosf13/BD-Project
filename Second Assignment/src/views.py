@@ -469,6 +469,9 @@ def statistics():
     if (id is None or user["admin_role"] != True):
         return redirect(url_for("app.page_not_found"))
     
+    # TODO most famous category/product
+    # Even most famous category/product monthly
+    # Podemos adicional à tabela getmonthlysale
     sales = get_monthly_sales()
     return render_template("statistics.html", username=user["username"], id=id, admin=True, sales=sales)
 
@@ -571,7 +574,6 @@ def edit_product_by_id(id):
 
         if preconditions_check:
             # Update the product details of the atributtes that are not empty
-            # TODO transformar isto numa procedure
             update_product({
                 "productID":int(product_id),
                 "productName":product_name,
