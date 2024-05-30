@@ -581,7 +581,7 @@ def edit_product_by_id(id):
                 "productID":int(product_id),
                 "productName":product_name,
                 "productDescription": product_description,
-                "productPrice":float(product_price),
+                "productPrice":float(product_price) if product_price != '' else None,
                 "productCategory":product_category,
                 "productQuantity": product_quantity
             })

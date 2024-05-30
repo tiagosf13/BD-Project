@@ -54,22 +54,25 @@ function displayProducts() {
                 const productCard = document.createElement('div');
                 productCard.classList.add('product-card');
 
-                // Add a click event listener to the product card
-                productCard.addEventListener('click', () => redirectToProductPage(product.id));
-
+                
                 const imgElement = document.createElement('img');
                 imgElement.src = `/get_image/catalog/${product.id}.png`;
                 imgElement.alt = product.name;
                 productCard.appendChild(imgElement);
+                
+                const productContent = document.createElement('div');
+                productContent.classList.add('product-content');
+                // Add a click event listener to the product card
+                productContent.addEventListener('click', () => redirectToProductPage(product.id));
 
-                productCard.innerHTML += `
-                    <div class="product-content">
-                        <h3>${product.name}</h3>
-                        <p style="color: red">ID: ${product.id}</p>
-                        <p class="price" style="color: green">${product.price} €</p>
-                        <p class="product-description">${product.description}</p>
-                    </div>
+                productContent.innerHTML += `
+                    <h3>${product.name}</h3>
+                    <p style="color: red">ID: ${product.id}</p>
+                    <p class="price" style="color: green">${product.price} €</p>
+                    <p class="product-description">${product.description}</p>
                 `;
+                
+                productCard.appendChild(productContent);
 
                 const productButtonsContainer = document.createElement('div'); // Container for cart buttons
                 productButtonsContainer.classList.add('product-buttons-container');

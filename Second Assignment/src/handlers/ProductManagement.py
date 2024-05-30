@@ -89,7 +89,7 @@ def create_product(product_name, product_description, product_price, product_cat
         db_query(
                 "INSERT INTO products (product_id, product_name, product_description, price, category, stock, available) \
                 VALUES (?, ?, ?, ?, ?, ?, ?);",
-                (product_id, product_name, product_description, product_price, product_category, product_quantity, True)
+                (product_id, product_name, product_description, product_price, product_category, product_quantity, 1)
         )
 
         # Create a folder for the user

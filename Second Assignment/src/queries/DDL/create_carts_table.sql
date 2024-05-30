@@ -7,7 +7,7 @@ BEGIN
     CREATE TABLE carts (
         user_id INT NOT NULL,
         product_id INT NOT NULL,
-        quantity INT NOT NULL CHECK(quantity > 0),
+        quantity INT NOT NULL CHECK(quantity >= 0),
 
         CONSTRAINT CARTS_PK 
             PRIMARY KEY (user_id, product_id),
