@@ -496,11 +496,10 @@ def products():
     if selected_category == None or selected_category == 'all':
         selected_category = ""
 
-    if (id := session.get("id") is not None):
+    if ((id := session.get("id")) is not None):
         admin = isAdmin(id)
     else:
         admin = False
-    
     products = get_all_products(search_term, selected_category, min_price, max_price, in_stock, sort_order,
                                 admin=admin)
 
@@ -691,7 +690,6 @@ def add_item_to_cart(product_id):
             cart_quantity = get_cart_quantity(id, product_id)
             product_stock = get_product_by_id(product_id)["stock"]
 
-            print (f"cart: {cart_quantity}\nquantity: {quantity}\nstock:{product_stock}")
             if (cart_quantity + quantity > product_stock) or \
                 (quantity > product_stock):
                 return jsonify({'error': 'Not enough stock.'}), 500

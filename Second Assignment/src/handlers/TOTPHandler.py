@@ -1,7 +1,7 @@
 import pyotp, qrcode, io, base64
 from datetime import datetime
 from handlers.DataBaseCoordinator import db_query
-from handlers.UserManagement import generate_emergency_code
+from handlers.UserManagement import generate_emergency_code, search_user
 
 
 def generate_emergency_codes(id, n_codes=10, code_length=6, reset=False):
@@ -20,7 +20,6 @@ def generate_emergency_codes(id, n_codes=10, code_length=6, reset=False):
     return emergency_codes
 
 def get_user_emergency_codes(id):
-    # TODO: Verificar se o user_id é valido
     # mudar e verificar se existe o codigo
     if check_existence_emergency_codes(id):
         query = "SELECT emergency_code FROM emergency_codes WHERE user_id = ?"

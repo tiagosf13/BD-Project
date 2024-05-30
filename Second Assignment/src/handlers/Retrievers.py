@@ -23,16 +23,13 @@ def get_all_products(search_term="", category="", min_price=0, max_price=100000,
         ## TODO podemos fazer isto numa UDF mas mantemos o order by fora
         query = f"""
             SELECT * 
-            FROM Available_Products
-            WHERE (product_name LIKE ? OR product_id LIKE ?) 
-                AND category LIKE ? 
-                AND price BETWEEN ? AND ?
+            FROM searchAvailableProducts (?, ?, ?, ?)
             ORDER BY price {sort_order};
         """
         # Add wildcards for LIKE query
         search_term = f"%{search_term}%"
         category = f"%{category}%"
-        results = db_query(query, (search_term, search_term, category, min_price, max_price))
+        results = db_query(query, (search_term, category, min_price, max_price))
 
     else:
         query = f"""
