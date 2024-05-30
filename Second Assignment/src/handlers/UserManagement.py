@@ -13,6 +13,10 @@ def delete_user(user_id):
     query = "EXEC deleteUser ?"
     db_query(query, (user_id))
 
+def isAdmin(user_id):
+    return db_query("SELECT dbo.isAdmin(?)", user_id)[0][0]
+
+
 def search_user(search_regex, search_regex_value, select_attribute = "*"):
 
     # Search user by a given regex
@@ -264,13 +268,6 @@ def create_user(username, password, email, secret_key, secret_key_timestamp):
     # Return the created user
     return id, ans
 
-def change_password(id, password):
-
-    # Build the query to update the password in the user's table
-    # Secure Query
-    query = 'UPDATE users SET password = ? WHERE id = ?'
-    db_query(query, (password, id))
-
 def update_user_account(id, new_username='', new_email='', new_password=''):
     # Build the query to update the username in the user's table
     # Secure Query
@@ -284,19 +281,6 @@ def get_username_by_id(id):
     query = "SELECT username FROM users WHERE user_id = ?;"
     result = db_query(query, (id))
 
-    return result[0][0] if result else None
-
-def get_user_role(id):
-
-    if not id:
-        return False
-
-    # Construct the SQL query to retrieve the username
-    # Secure Query
-    query = "SELECT admin_role FROM users WHERE user_id = ?;"
-    result = db_query(query, (id))
-
-    # Check if the username was found
     return result[0][0] if result else None
 
 def compose_email_body(products, order_id):
@@ -384,7 +368,6 @@ def check_user_bought_product(user_id, product_id):
 
 def get_user_data_by_id(id):
     info = {}
-    print("User ID: ", id)
     # Construct the SQL query to retrieve user's info, orders, and reviews
     ## Transformado numa view
     query = """
@@ -393,7 +376,6 @@ def get_user_data_by_id(id):
         WHERE user_id = ?;
     """
     query_results = db_query(query, (id,))
-    print(query_results)
 
     if query_results:
         for row in query_results:
@@ -405,8 +387,6 @@ def get_user_data_by_id(id):
                 info['reviews'] = [{"Product ID": row[4], "Rating": row[8], "Review": row[9]}]
     else:
         info = {}
-        
-    print("Info:", info)
 
     return info
 

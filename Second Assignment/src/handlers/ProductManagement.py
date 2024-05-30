@@ -36,8 +36,6 @@ def verify_id_exists(id, table):
     
     results = db_query(query, (id))
 
-    print(results)
-    print("ID:", id)
     if len(results) == 0:
         return False
     else:
@@ -124,15 +122,11 @@ def remove_all_products_from_cart(user_id):
     db_query(query, (user_id))
     return True
 
-
-def create_review(id, user_id, review, rating):
-    review_id = str(generate_random_product_id("reviews"))
-
-    # Secure Query
-    query = "INSERT INTO reviews (review_id, product_id, user_id, review_text, rating, review_date) VALUES (?, ?, ?, ?, ?, ?);"
-    db_query(query, (review_id, id, user_id, review, rating, datetime.now()))
-
-    return True
+def get_cart_quantity(id, product_id):
+    query = "SELECT quantity FROM carts WHERE user_id = ? AND product_id = ?"
+    quantity = db_query(query, (id, product_id))
+    
+    return quantity[0][0] if len(quantity) > 0 else 0
 
 
 def set_cart_item(id, product_id, quantity, operation):
@@ -160,6 +154,14 @@ def set_cart_item(id, product_id, quantity, operation):
         db_query(insert_query, (product_id, quantity, id))
         return True
 
+def create_review(id, user_id, review, rating):
+    review_id = str(generate_random_product_id("reviews"))
+
+    # Secure Query
+    query = "INSERT INTO reviews (review_id, product_id, user_id, review_text, rating, review_date) VALUES (?, ?, ?, ?, ?, ?);"
+    db_query(query, (review_id, id, user_id, review, rating, datetime.now()))
+
+    return True
 
 
 def register_order(user_id, order_details, products):
@@ -173,9 +175,6 @@ def register_order(user_id, order_details, products):
         order_id = str(generate_random_product_id("orders"))
         time = datetime.now()
         
-        print("Products:", products)
-        print("Total Price:", total_price)
-        print("Order ID:", order_id)
         
         query = """
             INSERT INTO orders (order_id, user_id, total_price, shipping_address, order_date) VALUES (?, ?, ?, ?, ?);

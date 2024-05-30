@@ -81,7 +81,6 @@ def get_product_by_id(id: int):
     query = "SELECT * FROM getProductById(?)";
     results = db_query(query, (id))
 
-
     if len(results) == 0:
         return None
     else:

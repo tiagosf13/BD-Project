@@ -96,7 +96,7 @@ def check_database_tables_exist(populateTables = False):
     # Read the SQL files for creating the tables
     create_table_users = read_sql_file("/queries/DDL/create_users_table.sql")
     create_table_products = read_sql_file("/queries/DDL/create_products_table.sql")
-    create_table_emergency_codes = read_sql_file("/DDL/queries/create_emergency_codes_table.sql")
+    create_table_emergency_codes = read_sql_file("/queries/DDL/create_emergency_codes_table.sql")
     create_table_carts = read_sql_file("/queries/DDL/create_carts_table.sql")
     create_table_reviews = read_sql_file("/queries/DDL/create_reviews_table.sql")
     create_table_orders = read_sql_file("/queries/DDL/create_orders_table.sql")

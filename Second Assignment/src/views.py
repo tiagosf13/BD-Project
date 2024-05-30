@@ -5,11 +5,11 @@ from handlers.UserManagement import send_password_reset_email
 from flask import Blueprint, flash, request, session, render_template, jsonify, redirect, url_for, send_from_directory, send_file
 from handlers.UserManagement import search_user, create_user, get_orders_by_user_id, check_password, generate_excel_user_data, \
                                     check_user_bought_product, update_user_account, is_valid_reset_token, get_user_by_reset_token, \
-                                    clear_reset_token, get_user_role, compose_email_body, generate_reset_token, set_reset_token_for_user, delete_user
+                                    clear_reset_token, compose_email_body, generate_reset_token, set_reset_token_for_user, delete_user, isAdmin
 
 from handlers.ProductManagement import create_review, set_cart_item, update_product_after_order, register_order, \
                                         create_product, remove_product, verify_id_exists, create_product_image, \
-                                        update_product, check_product_availability
+                                        update_product, check_product_availability, get_cart_quantity, remove_product_from_cart, remove_all_products_from_cart
 
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
 from handlers.DataBaseCoordinator import db_query, get_current_dir
@@ -125,8 +125,8 @@ def verify_totp_signup():
 
     secret_key = session.get("secret_key")
 
-    # Verify the TOTP code // TODO REMOVIDO NECESSIDADE DE TER OTP (apagar or True)
-    if verify_totp_code(inserted_totp, secret_key) or True:
+    # Verify the TOTP code
+    if verify_totp_code(inserted_totp, secret_key):
 
         username = session.get("signup_username")
         email = session.get("signup_email")
@@ -232,7 +232,6 @@ def verify_totp_login(id):
                                 emergency_codes != None and \
                                 (token in emergency_codes and emergency_codes[token] == True)
         
-        # TODO deactivated need for inserting totp code
         # Verify the TOTP code
         if preconditions_check:
             remove_valid_emergency_code(id, token)
@@ -242,7 +241,7 @@ def verify_totp_login(id):
         # Set session variables
         session["username"] = username
         session["id"] = id
-        session["admin"] = get_user_role(session["id"])
+        session["admin"] = isAdmin(id)
 
         return jsonify({'message': 'Login successful.'}), 200
 
@@ -460,7 +459,7 @@ def catalog(id):
     # Get the username and id from the session
     user = search_user("user_id", id, "username, admin_role")
 
-    if user["admin_role"] == True:
+    if user["admin_role"]:
         return render_template("catalog_admin.html", username=user["username"], id=id, admin=True)
     else:
         # Return the catalog page
@@ -497,13 +496,12 @@ def products():
         selected_category = ""
 
     if (id := session.get("id") is not None):
-        user = search_user("user_id", session.get("id"), "username, admin_role")
-        isAdmin = user["admin_role"]
+        admin = isAdmin(id)
     else:
-        isAdmin = False
-        
+        admin = False
+    
     products = get_all_products(search_term, selected_category, min_price, max_price, in_stock, sort_order,
-                                admin=isAdmin)
+                                admin=admin)
 
     return jsonify(products)
 
@@ -608,18 +606,18 @@ def product_quantities(id):
 def product_page(product_id):
     # Fetch the product details based on the product_id
     # You can retrieve the product information from your data source
-    id = session.get("id")
-    
-    if verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
-        return redirect(url_for("views.catalog", id=id))
-    
     product = get_product_by_id(product_id)
-    admin = get_user_role(id)
+    if not verify_id_exists(product_id, "products") or\
+       not check_product_availability(product_id):
+        return redirect(url_for("views.catalog", id=id))
 
+    id = session.get("id")
     if id == None:
         # Pass the product details to the template
         return render_template('product_anonymous.html', product = product)
-    elif admin:
+    
+
+    if isAdmin(id):
         return render_template('product_admin.html', product = product)
     else:
         # Pass the product details to the template
@@ -678,7 +676,7 @@ def add_item_to_cart(product_id):
     id = session.get("id")
     if id == None:
         return redirect(url_for("views.login"))
-    elif verify_id_exists(product_id, "products") == False or check_product_availability(product_id) == False:
+    elif not verify_id_exists(product_id, "products") or not check_product_availability(product_id):
         return redirect(url_for("views.catalog", id=id))
     else:
         try:
@@ -689,9 +687,12 @@ def add_item_to_cart(product_id):
                 return jsonify({'error': 'Invalid quantity.'}), 500
             
             # Secure Query
-            result = get_cart_quantity(id, product_id)
+            cart_quantity = get_cart_quantity(id, product_id)
+            product_stock = get_product_by_id(product_id)["stock"]
 
-            if (result != {} and result["cart_quantity"] + quantity > result["product_stock"]) or (result == {} and quantity > result["product_stock"]):
+            print (f"cart: {cart_quantity}\nquantity: {quantity}\nstock:{product_stock}")
+            if (cart_quantity + quantity > product_stock) or \
+                (quantity > product_stock):
                 return jsonify({'error': 'Not enough stock.'}), 500
             else:
                 set_cart_item(id, product_id, quantity, "add")
@@ -721,15 +722,10 @@ def remove_item_from_cart(product_id):
             if check_product_in_cart(id, product_id) == False or quantity <= 0:
                 return jsonify({'error': 'Product not in cart.'}), 500
             else:
-                result = get_cart_quantity(id, product_id)
-
-                if result != {} and result["cart_quantity"] == quantity:
-                    # Remove the product from the cart
-                    remove_product_from_cart(product_id, id)
-                    return jsonify({'message': 'Product removed from the cart.'}), 200
-                elif result != {} and result["cart_quantity"] - quantity >= 0:
-                    # Secure Query: Update the user's cart in the database
-                    set_cart_item(id, product_id, quantity, "remove")
+                cart_quantity = get_cart_quantity(id, product_id)
+                
+                if quantity > 0:
+                    set_cart_item(id, product_id, min(quantity, cart_quantity), "remove")
                     return jsonify({'message': 'Product removed from the cart.'}), 200
                 else:
                     return jsonify({'message': 'Product not in the cart.'}), 500
@@ -756,9 +752,7 @@ def remove_all_items_cart():
     id = session.get("id")
     if id == None:
         return redirect(url_for("views.login"))
-
-    # Remove all the products from the cart
-
+    
     # Remove all the products from the cart
     remove_all_products_from_cart(id)
 
