@@ -1,5 +1,4 @@
 import os
-from tkinter import SE
 from handlers.DataBaseCoordinator import db_query
 
 
@@ -33,8 +32,8 @@ def get_all_products(search_term="", category="", min_price=0, max_price=100000,
         # Add wildcards for LIKE query
         search_term = f"%{search_term}%"
         category = f"%{category}%"
-        
         results = db_query(query, (search_term, search_term, category, min_price, max_price))
+
     else:
         query = f"""
             SELECT * 

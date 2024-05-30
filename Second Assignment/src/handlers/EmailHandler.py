@@ -9,7 +9,6 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
-from handlers.Retrievers import get_product_by_id
 from handlers.DataBaseCoordinator import db_query, read_json
 
 def get_username_by_id(id):

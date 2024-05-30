@@ -1,4 +1,3 @@
-from math import prod
 import os, tempfile
 from handlers.extensions import bcrypt
 from handlers.UserManagement import send_password_reset_email
@@ -458,7 +457,9 @@ def catalog(id):
 
     # Get the username and id from the session
     user = search_user("user_id", id, "username, admin_role")
-
+    if user is None:
+        return redirect(url_for("views.logout"))
+    
     if user["admin_role"]:
         return render_template("catalog_admin.html", username=user["username"], id=id, admin=True)
     else:

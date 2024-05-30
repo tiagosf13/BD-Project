@@ -112,4 +112,4 @@ def check_database_tables_exist(populateTables = False):
     db_query(create_table_products_ordered)
 
     if (populateTables):
-        db_query(read_sql_file("/queries/InitialTestData/populateDB.sql"));
+        db_query(read_sql_file("/queries/InitialTestData/populateDB.sql"))

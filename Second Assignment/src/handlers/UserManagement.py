@@ -1,11 +1,9 @@
-from http.client import PRECONDITION_FAILED
 import os, random, shutil, secrets, string, requests, hashlib, pandas as pd
 from flask import render_template_string
 from string import ascii_uppercase, ascii_lowercase
 from handlers.EmailHandler import send_email
 from handlers.DataBaseCoordinator import db_query
 from handlers.ProductManagement import get_product_by_id
-from handlers.Verifiers import is_valid_input
 from handlers.Retrievers import get_current_dir
 from datetime import datetime, timedelta  # For working with token expiration
 
