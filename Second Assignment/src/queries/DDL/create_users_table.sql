@@ -14,7 +14,9 @@ BEGIN
         totp_secret_key VARCHAR(255) NOT NULL,
         totp_secret_key_timestamp DATETIMEOFFSET NOT NULL,
         admin_role BIT NOT NULL,
-        PRIMARY KEY (user_id),
+        
+        CONSTRAINT USERS_PK
+            PRIMARY KEY (user_id),
     );
 
     -- Null User -> To be used when an account gets deleted

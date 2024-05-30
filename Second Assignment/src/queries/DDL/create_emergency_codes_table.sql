@@ -9,8 +9,12 @@ BEGIN
         emergency_code INT NOT NULL,
         emergency_code_valid BIT NOT NULL,
         emergency_code_timestamp DATETIMEOFFSET NOT NULL,
-        PRIMARY KEY (user_id, emergency_code),
-        FOREIGN KEY (user_id) REFERENCES users(user_id)
+
+        CONSTRAINT EMERGENCY_CODES_PK 
+            PRIMARY KEY (user_id, emergency_code),
+
+        CONSTRAINT EMERGENCY_CODES_FK_user_id
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
     );
 END
 

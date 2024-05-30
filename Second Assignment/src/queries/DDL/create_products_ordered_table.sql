@@ -7,10 +7,15 @@ BEGIN
     CREATE TABLE products_ordered (
         order_id INT NOT NULL,
         product_id INT NOT NULL,
-        quantity INT NOT NULL,
-        PRIMARY KEY (order_id, product_id),
-        FOREIGN KEY (order_id) REFERENCES orders(order_id),
-        FOREIGN KEY (product_id) REFERENCES products(product_id)
+        quantity INT NOT NULL  CHECK(quantity > 0),
+
+        CONSTRAINT PRODUCTS_ORDERED_PK
+            PRIMARY KEY (order_id, product_id),
+        
+        CONSTRAINT PRODUCTS_ORDERED_PK_order_id
+            FOREIGN KEY (order_id) REFERENCES orders(order_id),
+        CONSTRAINT PRODUCTS_ORDERED_PK_product_id
+            FOREIGN KEY (product_id) REFERENCES products(product_id)
     );
 END
 
