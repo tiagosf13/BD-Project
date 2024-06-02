@@ -1,7 +1,0 @@
-*.docx
-src/credentials/
-src/credentials/
-src/database
-*.xlsx
-*.pyc
-venv
