@@ -7,7 +7,7 @@ SELECT username FROM users WHERE user_id = ?;
 -- EmailHandler:sql_to_pdf --
 SELECT carts.product_id, carts.quantity, products.product_name, products.price, carts.quantity * products.price AS total
 FROM carts
-JOIN products ON carts.product_id = products.product_id
+    JOIN products ON carts.product_id = products.product_id
 WHERE carts.user_id = ?;
 
 
@@ -107,7 +107,7 @@ SELECT * from getUserOrders(?);
 -- UserManagement:check_user_bought_product --
 SELECT products_ordered.order_id 
 FROM products_ordered 
-JOIN orders ON products_ordered.order_id = orders.order_id
+    JOIN orders ON products_ordered.order_id = orders.order_id
 WHERE orders.user_id = ? AND products_ordered.product_id = ?;
 
 

@@ -47,6 +47,16 @@ Here are the key functionalities and usage instructions for the platform:
 
 Feel free to explore and utilize these features to make the most out of the platform. If you have any further questions or need assistance, please refer to the contact information provided.
 
+## Using your Database
+
+To use your database, follow these steps:
+1. Create a new database in your SQL server.
+2. Open the `DataBaseCredentials.json` file:
+	1. Change the `host` variable to your database URI.
+	2. Change the `dbname` variable to your database name.
+	3. Change the `user` variable to your database username.
+	4. Change the `password` variable to your database password.
+
 ## Issues and Support
 
 For support and issue resolution, please reach out using the information in the **Contact** header.
