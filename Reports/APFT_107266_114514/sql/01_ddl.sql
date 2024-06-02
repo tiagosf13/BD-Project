@@ -33,6 +33,10 @@ BEGIN
         0                   -- admin_role
     )
 END
+-- otimizar search de user_id e username
+CREATE INDEX IX_users_username ON users(username)
+
+
 
 -- Check if the table exists -- Create the table if it does not exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'emergency_codes')
@@ -69,6 +73,11 @@ BEGIN
             PRIMARY KEY (product_id)
     );
 END
+-- otimizar search de product_id, product_name, product_category
+CREATE INDEX IX_products_product_name ON products(product_name)
+CREATE INDEX IX_products_product_category ON products(category)
+
+
 
 -- Check if the table exists -- Create the table if it does not exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'reviews')
@@ -91,6 +100,10 @@ BEGIN
             FOREIGN KEY (user_id) REFERENCES users(user_id)
     );
 END
+-- otimizar search de product_id
+CREATE INDEX IX_reviews_product_id ON reviews(product_id)
+
+
 
 -- Check if the table exists -- Create the table if it does not exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'orders')
@@ -110,6 +123,10 @@ BEGIN
             FOREIGN KEY (user_id) REFERENCES users(user_id)
     );
 END
+-- Optimizar search de user_id
+CREATE INDEX IX_orders_user_id ON orders(user_id)
+
+
 
 -- Check if the table exists -- Create the table if it does not exist
 IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'products_ordered')
@@ -129,6 +146,7 @@ BEGIN
             FOREIGN KEY (product_id) REFERENCES products(product_id)
     );
 END
+
 
 
 -- Check if the table exists -- Create the table if it does not exist

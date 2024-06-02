@@ -121,8 +121,18 @@ Descreva os indices criados. Junte uma cópia do SQL de criação do indice.
 Describe the indexes created. Attach a copy of the SQL to create the index.
 
 ```sql
--- Create an index to speed
-CREATE INDEX index_name ON table_name (column1, column2, ...);
+-- Optimizar search de user_id
+CREATE INDEX IX_orders_user_id ON orders(user_id)
+
+-- otimizar search de product_id, product_name, product_category
+CREATE INDEX IX_products_product_name ON products(product_name)
+CREATE INDEX IX_products_product_category ON products(category)
+
+-- otimizar search de product_id
+CREATE INDEX IX_reviews_product_id ON reviews(product_id)
+
+-- otimizar search de user_id e username
+CREATE INDEX IX_users_username ON users(username)
 ```
 
 # SQL Programming: Stored Procedures, Triggers, UDF
@@ -139,7 +149,7 @@ This project was developed using GitHub, this is our [GitHub Repository](https:/
 
 # Database init data
 
-[Indexes File](sql/01_ddl.sql "SQLFileQuestion")
+[Indexes File](sql/04_ddl.sql "SQLFileQuestion")
 
 # Presentation
 
