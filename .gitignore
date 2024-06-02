@@ -1,3 +1,4 @@
+*.vs
 *.docx
 src/credentials/
 src/credentials/
