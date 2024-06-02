@@ -51,7 +51,7 @@ Feel free to explore and utilize these features to make the most out of the plat
 
 To use your database, follow these steps:
 1. Create a new database in your SQL server.
-2. Open the `DataBaseCredentials.json` file:
+2. Open the `DataBaseCredentials.json` file (present in the `Second Assignment/src/credentials/` directory):
 	1. Change the `host` variable to your database URI.
 	2. Change the `dbname` variable to your database name.
 	3. Change the `user` variable to your database username.
