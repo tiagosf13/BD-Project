@@ -68,7 +68,7 @@ There will be one main entity, the `Users`:
 
 ### APFE
 
-No improvements were made following the APFE assignment. The database design was appropriate and aligned with the requirements necessary to build the application.
+Following the APFE assignment only one change was made: Dropped review_id column from table reviews, a user_id alongside with product_id were made the primary key of the table, and as this change made `Reviews` a weak entity, we represented this change in DER.
 
 # ER - Relational Schema
 
@@ -78,7 +78,7 @@ No improvements were made following the APFE assignment. The database design was
 
 ### APFE
 
-No improvements were made following the APFE assignment. The database design was appropriate and aligned with the requirements necessary to build the application.
+Following the APFE assignment only one change was made: Dropped review_id column from table reviews, a user_id alongside with product_id were made the primary key of the table.
 
 # SQL DDL - Data Definition Language
 
@@ -236,6 +236,8 @@ WHERE orders.user_id = ? AND products_ordered.product_id = ?;
 
 To avoid redundancy in the relationship `Orders contains Products`, we created an auxiliary table `Products Ordered`, thereby ensuring adherence to the Third Normal Form (3NF) instead of placing all information within a single table.
 
+Also, on the table `Reviews`, `product_id` alongside `user_id` would uniquely define review_id, violating the 3rd normal form, so in order to prevent that from happening, a normalization on that table was made, removing the column `review_id` from the column and promoting the candidate key (`user_id`, `product_id`) to a primary key fixed the issue and setting the table to respect 3FN.
+
 Additionally, beyond the normalization mentioned, we designed the database with normal forms in mind from the outset. This approach enabled us to achieve a cleaner database design and minimize the number of NULL entries in the tables.
 
 # Indexes
@@ -293,7 +295,7 @@ To use your database, follow these steps:
 
 # Database init data
 
-[Indexes File](sql/04_db_init.sql "SQLFileQuestion")
+[SQL Initial Data File](sql/04_db_init.sql "SQLFileQuestion")
 
 # Presentation
 
