@@ -266,6 +266,8 @@ CREATE INDEX IX_reviews_product_id ON reviews(product_id)
 -- otimizar search de user_id e username
 CREATE INDEX IX_users_username ON users(username)
 ```
+After creating the index's we compared search times on the table `Products` and got the following results which show that index's improved search times even for a small amount of data, which show the importance of creating the chosen index's
+![Index search time](images/Index_Data.png)
 
 # SQL Programming: Stored Procedures, Triggers, UDF
 
