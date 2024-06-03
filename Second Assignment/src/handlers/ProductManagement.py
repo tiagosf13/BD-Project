@@ -29,8 +29,6 @@ def verify_id_exists(id, table):
     # Secure Query: Check if the ID exists in the specified table
     if table == "products":
         query = "SELECT product_id FROM products WHERE product_id = ?;"
-    elif table == "reviews":
-        query = "SELECT product_id FROM reviews WHERE review_id = ?;"
     elif table == "orders":
         query = "SELECT user_id FROM orders WHERE order_id = ?;"
     
@@ -154,13 +152,14 @@ def set_cart_item(id, product_id, quantity, operation):
         db_query(insert_query, (product_id, quantity, id))
         return True
 
-def create_review(id, user_id, review, rating):
-    review_id = str(generate_random_product_id("reviews"))
-
+def create_review(product_id, user_id, review, rating):
     # Secure Query
-    query = "INSERT INTO reviews (review_id, product_id, user_id, review_text, rating, review_date) VALUES (?, ?, ?, ?, ?, ?);"
-    db_query(query, (review_id, id, user_id, review, rating, datetime.now()))
-
+    print(product_id)
+    print(user_id)
+    print(review)
+    print(rating)
+    query = "INSERT INTO reviews (product_id, user_id, review_text, rating, review_date) VALUES (?, ?, ?, ?, ?);"
+    db_query(query, (product_id, user_id, review, rating, datetime.now()))
     return True
 
 

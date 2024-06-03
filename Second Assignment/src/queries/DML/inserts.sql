@@ -6,8 +6,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?);
 
 -- Insert a review --
 -- ProductManagement:create_review --
-INSERT INTO reviews (review_id, product_id, user_id, review_text, rating, review_date) 
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO reviews (product_id, user_id, review_text, rating, review_date) 
+VALUES (?, ?, ?, ?, ?);
 
 
 -- Register an order, creating the order and then adding the products ordered --

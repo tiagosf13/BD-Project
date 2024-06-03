@@ -10,7 +10,7 @@ BEGIN
         product_description VARCHAR(255) NOT NULL,
         price DECIMAL(10, 2) NOT NULL CHECK(price >= 0),
         category VARCHAR(255) NOT NULL,
-        stock INT NOT NULL CHECK(stock > 0),
+        stock INT NOT NULL CHECK(stock >= 0),
         available BIT NOT NULL,
 
         CONSTRAINT PRODUCTS_PK

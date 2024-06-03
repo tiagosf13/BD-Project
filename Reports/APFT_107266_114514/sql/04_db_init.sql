@@ -265,22 +265,22 @@ WHERE user_id BETWEEN 10000 and 10009;
 
 -- Reviews
     INSERT INTO Reviews
-    VALUES (1, 5000, 10001, 'Great product!', 5.0, '2024-02-20')
+    VALUES (5000, 10001, 'Great product!', 5.0, '2024-02-20')
     INSERT INTO Reviews
-    VALUES (2, 5072, 10005, 'Very satisfied', 4.0, '2024-03-15')
+    VALUES (5072, 10005, 'Very satisfied', 4.0, '2024-03-15')
     INSERT INTO Reviews
-    VALUES (3, 5061, 10009, 'Not bad', 3.0, '2024-05-10')
+    VALUES (5061, 10009, 'Not bad', 3.0, '2024-05-10')
     INSERT INTO Reviews
-    VALUES (4, 5050, 10003, 'Excellent quality', 5.0, '2024-04-20')
+    VALUES (5050, 10003, 'Excellent quality', 5.0, '2024-04-20')
     INSERT INTO Reviews
-    VALUES (5, 5060, 10000, 'Quite good', 4.0, '2024-03-25')
+    VALUES (5060, 10000, 'Quite good', 4.0, '2024-03-25')
     INSERT INTO Reviews
-    VALUES (6, 5043, 10007, 'Needs improvement', 2.0, '2024-03-01')
+    VALUES (5043, 10007, 'Needs improvement', 2.0, '2024-03-01')
     INSERT INTO Reviews
-    VALUES (7, 5031, 10002, 'Very good', 4.0, '2024-04-07')
+    VALUES (5031, 10002, 'Very good', 4.0, '2024-04-07')
     INSERT INTO Reviews
-    VALUES (8, 5071, 10004, 'Top notch', 5.0, '2024-05-15')
+    VALUES (5071, 10004, 'Top notch', 5.0, '2024-05-15')
     INSERT INTO Reviews
-    VALUES (9, 5060, 10008, 'Just okay', 3.0, '2024-02-25')
+    VALUES (5060, 10008, 'Just okay', 3.0, '2024-02-25')
     INSERT INTO Reviews
-    VALUES (10, 5072, 10006, 'Perfect fit', 5.0, '2024-04-01')
+    VALUES (5072, 10006, 'Perfect fit', 5.0, '2024-04-01')

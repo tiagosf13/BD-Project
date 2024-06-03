@@ -66,7 +66,7 @@ BEGIN
         product_description VARCHAR(255) NOT NULL,
         price DECIMAL(10, 2) NOT NULL CHECK(price >= 0),
         category VARCHAR(255) NOT NULL,
-        stock INT NOT NULL CHECK(stock > 0),
+        stock INT NOT NULL CHECK(stock >= 0),
         available BIT NOT NULL,
 
         CONSTRAINT PRODUCTS_PK
@@ -84,7 +84,6 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'revie
 BEGIN
     -- Table: public.reviews -- Table for storing product reviews data
     CREATE TABLE reviews (
-        review_id INT NOT NULL CHECK(review_id > 0),
         product_id INT NOT NULL,
         user_id INT NOT NULL,
         review_text VARCHAR(255) NOT NULL,
@@ -92,7 +91,7 @@ BEGIN
         review_date DATE NOT NULL,
 
         CONSTRAINT REVIEWS_PK
-            PRIMARY KEY (review_id),
+            PRIMARY KEY (product_id, user_id),
         
         CONSTRAINT REVIEWS_PK_product_id
             FOREIGN KEY (product_id) REFERENCES products(product_id),
@@ -101,7 +100,6 @@ BEGIN
     );
 END
 -- otimizar search de product_id
-CREATE INDEX IX_reviews_product_id ON reviews(product_id)
 
 
 

@@ -452,6 +452,7 @@ def catalog(id):
     # Mas valor é ignorado porque havia exploit
     # de ir para a pagina de administrador sem ser admin
     id = session.get("id")
+    print(id)
     if id == None:
         return redirect(url_for("views.login"))
 
@@ -491,10 +492,9 @@ def products():
     max_price = request.args.get('maxPrice', 1000000, type=float)
     in_stock = request.args.get('inStock', True, type=bool)
     sort_order = request.args.get('sortOrder', 'asc')
-
-    
     if selected_category == None or selected_category == 'all':
         selected_category = ""
+
 
     if ((id := session.get("id")) is not None):
         admin = isAdmin(id)
@@ -604,6 +604,11 @@ def product_quantities(id):
 
 @views.route('/product/<int:product_id>/', methods=['GET'])
 def product_page(product_id):
+    id = session.get("id")
+    if id == None:
+        # Pass the product details to the template
+        return render_template('product_anonymous.html', product = product)
+    
     # Fetch the product details based on the product_id
     # You can retrieve the product information from your data source
     product = get_product_by_id(product_id)
@@ -611,10 +616,6 @@ def product_page(product_id):
        not check_product_availability(product_id):
         return redirect(url_for("views.catalog", id=id))
 
-    id = session.get("id")
-    if id == None:
-        # Pass the product details to the template
-        return render_template('product_anonymous.html', product = product)
     
 
     if isAdmin(id):

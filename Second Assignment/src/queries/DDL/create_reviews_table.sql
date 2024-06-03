@@ -5,7 +5,6 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'revie
 BEGIN
     -- Table: public.reviews -- Table for storing product reviews data
     CREATE TABLE reviews (
-        review_id INT NOT NULL CHECK(review_id > 0),
         product_id INT NOT NULL,
         user_id INT NOT NULL,
         review_text VARCHAR(255) NOT NULL,
@@ -13,7 +12,7 @@ BEGIN
         review_date DATE NOT NULL,
 
         CONSTRAINT REVIEWS_PK
-            PRIMARY KEY (review_id),
+            PRIMARY KEY (product_id, user_id),
         
         CONSTRAINT REVIEWS_PK_product_id
             FOREIGN KEY (product_id) REFERENCES products(product_id),

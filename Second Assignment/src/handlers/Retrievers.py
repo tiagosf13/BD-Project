@@ -106,12 +106,11 @@ def get_product_reviews(product_id):
     reviews = []
     for row in results:
         review = {
-            "review_id": row[0],
-            "product_id": row[1],
-            "user_id": row[2],
-            "review": row[3],
-            "rating": row[4],
-            "review_date": row[5]
+            "product_id": row[0],
+            "user_id": row[1],
+            "review": row[2],
+            "rating": row[3],
+            "review_date": row[4]
         }
         reviews.append(review)
 

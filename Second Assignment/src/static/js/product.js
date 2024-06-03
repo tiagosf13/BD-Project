@@ -80,7 +80,7 @@ function addReview(event) {
     })
     .catch(error => {
         console.error('Error adding review:', error);
-        alert(error.message); // Display error message
+        alert(error + "\nYou can only review a product you bought."); // Display error message
     });
 }
 

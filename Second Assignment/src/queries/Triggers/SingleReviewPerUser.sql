@@ -20,18 +20,13 @@ BEGIN
            @reviewDate = review_date
     FROM inserted;
 
-    declare @previousReviewID as int;
-    SELECT @previousReviewID = review_id
-    FROM REVIEWS
-    WHERE user_id = @userID AND product_id = @productID
-
     IF (@previousReviewID is not NULL)
     BEGIN
         UPDATE REVIEWS
         SET review_text = @reviewText,
             rating = @rating, 
             review_date = @reviewDate
-        WHERE review_id = @previousReviewID
+        WHERE user_id = @userID AND product_id = @productID
     END
     ELSE
     BEGIN
