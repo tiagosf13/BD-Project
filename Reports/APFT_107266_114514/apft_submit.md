@@ -279,7 +279,7 @@ After creating the index's we compared search times on the table `Products` and 
 
 ### Forms
 
-There are many other forms, we only logged 10 in this report in order to not occupy too many space. If you wish to view all of them, you can see them [here](https://github.com/tiagosf13/BD-Project/tree/6fff4434a92e3e8a268c80b434a68204322b57c2/Second%20Assignment/src/queries/DML), or just by reviewing the [code](https://github.com/tiagosf13/BD-Project/tree/6fff4434a92e3e8a268c80b434a68204322b57c2/Second%20Assignment/src).
+There are many other forms, we only logged 10 in this report in order to not occupy too many space. If you wish to view all of them, you can see them [here](https://github.com/tiagosf13/BD-Project/tree/main/Second%20Assignment/src/queries/DML), or just by reviewing the [code](https://github.com/tiagosf13/BD-Project/tree/main/Second%20Assignment/src).
 
 ### GitHub Repository
 
