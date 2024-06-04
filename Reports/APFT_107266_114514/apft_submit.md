@@ -303,4 +303,6 @@ To use your database, follow these steps:
 
 [Slides](Apresentação.pdf)
 
-[Video](https://uapt33090-my.sharepoint.com/:v:/g/personal/t_fonseca_ua_pt/EXb6lB6GSGZPo3uJjZEqt-4BAtolnn_I06x7exbqrrPkDg?e=QKuHpa)
+<video src="Demo.mp4" controls></video>
+
+[Link Video](https://uapt33090-my.sharepoint.com/:v:/g/personal/t_fonseca_ua_pt/EXb6lB6GSGZPo3uJjZEqt-4BAtolnn_I06x7exbqrrPkDg?e=QKuHpa)
