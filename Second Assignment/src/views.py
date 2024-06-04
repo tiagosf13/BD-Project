@@ -11,7 +11,7 @@ from handlers.ProductManagement import create_review, set_cart_item, update_prod
                                         update_product, check_product_availability, get_cart_quantity, remove_product_from_cart, remove_all_products_from_cart
 
 from handlers.EmailHandler import send_email_with_attachment, sql_to_pdf
-from handlers.DataBaseCoordinator import db_query, get_current_dir
+from handlers.DataBaseCoordinator import get_current_dir
 from handlers.Verifiers import check_username_exists, check_email_exists, check_product_in_cart, is_valid_input
 from handlers.Retrievers import get_all_products, get_product_by_id, get_product_reviews, get_cart, get_user_email, get_monthly_sales
 from handlers.TOTPHandler import remove_valid_emergency_code, get_user_emergency_codes, get_totp_secret, generate_qr_code,\
