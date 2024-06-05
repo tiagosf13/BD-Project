@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QR Code</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/totp_signup.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='js/emergency_codes.js')}}"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code and Secret Key</h1>
+
+        <!-- Display the secret key -->
+        <p>Secret Key: {{ secret_key }}</p>
+
+        <!-- Display the QR code -->
+        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+        <div class="container">
+            <div class="buttons">
+                <button class="continue-button" onclick="redirectProfile('{{username}}')">Continue to Profile</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
